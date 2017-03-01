@@ -1,0 +1,176 @@
+.form {
+	vertical-align: middle;
+	text-align: center;
+	width: 76%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.margin-top{
+	margin-top: 50px;
+}
+
+.margin-right{
+	margin-right: 10px;
+}
+
+.margin-left{
+	margin-left: 10px;
+}
+
+.margin-long-left{
+	margin-left: 40px;
+}
+
+#sortable{
+	padding-left: 0px;
+}
+
+#sortable li {
+	margin-left: auto !important;
+	margin-right: auto !important;
+	width: 455px;
+	text-align: left;
+}
+
+.main {
+	text-align: center;
+}
+
+.sugo .layer, .torlesPopupClass .layer, .fapopup .layer, .ujTemaPopup .layer, .archivalasPopup .layer, .rendezesEllenorzesPopup .layer, .sulyozasrakerultPopup .layer, .sulyozasEllenorzesPopup .layer, .ujJelszoPopup .layer {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	background-color: #ffffff;
+    opacity: 0.95;
+    filter: alpha(opacity=95);
+	z-index: 1031;
+}
+
+.sugo .alert p, .torlesPopupClass .alert p, .fapopup .alert p, .layer, .ujTemaPopup .alert p, .archivalasPopup .alert p, .rendezesEllenorzesPopup .alert p, .sulyozasrakerultPopup .alert p, .sulyozasEllenorzesPopup .alert p, .ujJelszoPopup .alert p {
+	text-align: justify;
+}
+
+.sugo .alert, .torlesPopupClass .alert, .fapopup .alert, .ujTemaPopup .alert, .archivalasPopup .alert, .rendezesEllenorzesPopup .alert, .sulyozasrakerultPopup .alert, .sulyozasEllenorzesPopup .alert, .ujJelszoPopup .alert {
+	position: absolute;
+	top: 0;
+	margin-top: 80px;
+	width: 50%;
+	text-align: center;
+	margin-left: 24%;
+	z-index: 1032;
+}
+
+.torlesPopupClass button, .fapopup button, .ujTemaPopup button, .archivalasPopup button, .rendezesEllenorzesPopup button, .sulyozasrakerultPopup button, .sulyozasEllenorzesPopup button, .ujJelszoPopup button {
+	margin-top: 30px;
+}
+
+.table tr td, .fastruktura{
+	text-align: left;
+}
+
+.table tr td.text-right{
+	text-align: right;
+}
+
+.szint1{
+	padding-left: 40px !important;
+}
+
+.szint2{
+	padding-left: 80px !important;
+}
+
+.szint3{
+	padding-left: 120px !important;
+}
+
+.szint4{
+	padding-left: 160px !important; 
+}
+
+.szint5{
+	padding-left: 200px !important;
+}
+
+.szint6{
+	padding-left: 240px !important;
+}
+
+.szint7{
+	padding-left: 280px !important;
+}
+
+.szint8{
+	padding-left: 160px !important;
+}
+
+.szint9{
+	padding-left: 180px !important;
+}
+
+.szint10{
+	padding-left: 200px !important;
+}
+
+.treebutton, .removebutton, .editbutton{
+	float: right;
+}
+
+#sortable li{
+	height: 45px;
+}
+
+.vekony {
+	width: 50px;
+	text-align: center;
+}
+
+h1{
+	font-size: 14px;
+    font-weight: 500;
+    padding: 10px 0px;
+	margin: auto;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	max-width: 300px;
+	color: #2020FF;
+}
+
+h3{
+	font-weight: 500;
+	font-size: 24px;
+}
+
+.form-group label{
+	font-size: 12px;
+	font-weight: 300;
+}
+
+.form-group input{
+	font-weight: 500;
+	font-size: 18px;
+}
+
+.fapopup .alert-info{
+	background-color: white;
+}
+
+.fastruktura a{
+	font-size: 14px;
+}
+
+.fapopup h3{
+	font-weight: 500;
+	font-size: 18px;
+}
+
+table tr .cimke{
+	text-align:left;
+}
+
+table tr .ertek{
+	padding-left: 50px;
+	text-align: right;
+}
