@@ -197,7 +197,10 @@
 			
 				<?php
 					require("service/db.php");
-					$sql = "SELECT * FROM sugo WHERE nev='ujelem';";
+					if($_GET['elem'])
+						$sql = "SELECT * FROM sugo WHERE nev='elemmodositasa';";
+					else 
+						$sql = "SELECT * FROM sugo WHERE nev='ujelem';";
 					$result = $conn->query($sql);
 					while($row = mysqli_fetch_array($result)){
 						echo $row['szoveg'];

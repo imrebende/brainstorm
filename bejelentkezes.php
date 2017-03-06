@@ -131,7 +131,7 @@ if(isset($_GET['logout'])){
 									$sql = "SELECT * FROM listak;";
 									$result = $conn->query($sql);
 									while($row = mysqli_fetch_array($result)){
-										echo "<tr id='" . $row['lista_neve'] . "Row'>";
+										echo "<tr id='" . str_replace(" ", "%20", $row['lista_neve']) . "Row'>";
 										echo "<td>" . $row['lista_neve'] . "</td>";
 										$statusz = "";
 										if($row['allapot'] == "uj"){
@@ -149,7 +149,7 @@ if(isset($_GET['logout'])){
 												<button class='btn btn-success szakertokButton' type='button' id='" . $row['lista_neve'] . "Szakertok'>Szakértők</button> 
 												<button class='btn btn-success ujJelszoButton' type='button' id='" . $row['lista_neve'] . "Jelszo'>Új jelszó</button> 
 												<button class='btn btn-danger removeButton' type='button' id='" . $row['lista_neve'] . "'>Törlés</button>
-												<button class='btn btn-success openButton' type='button' id='" . $row['lista_neve'] . "Open'>Megnyitás</button>
+												<button class='btn btn-success openButton' type='button' id='" . str_replace(" ", "%20", $row['lista_neve']) . "Open'>Megnyitás</button>
 												</td>";
 										echo "</tr>";
 									}
@@ -253,11 +253,14 @@ if(isset($_GET['logout'])){
 		
 		$('.openButton').click(function(){
 			var id = $(this).context.id.replace("Open", "");
-			console.log($("#" + id + "Row .pw").html());
-			var pw = $("#" + id + "Row .pw").html() == undefined;
-			if($("#" + id + "Row .pw").html() == undefined) pw = "";
+			//document.getElementById("szerda18:00Row").getElementsByClassName("pw")
+			var idString = document.getElementById(id + "Row").getElementsByClassName("pw");
+			//console.log($(idString).html());
+			var pw = $(idString).html() == undefined;
+			if($(idString).html() == undefined) pw = "";
+			
 			console.log(pw);
-			window.location.href = "lista.php?tema=" + id + "&jelszo=" + $("#" + id + "Row .pw").html();
+			window.location.href = "lista.php?tema=" + id + "&jelszo=" + $(idString).html();
 		});
 		
 		$('.removeButton').click(function(){

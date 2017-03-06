@@ -70,7 +70,7 @@
 					}
 				 ?></textarea> <br/>
 				 <button class="sugoFelkuldes" id="uj">Súgó felküldése</button>
-				 <h3>Szempont paraméterei</h3>
+				 <h3>Új elem bevitele</h3>
 				 <textarea rows="8" cols="50" id="ujelemSzoveg"><?php
 					require("service/db.php");
 									
@@ -82,6 +82,18 @@
 					}
 				 ?></textarea> <br/>
 				 <button class="sugoFelkuldes" id="ujelem">Súgó felküldése</button>
+				 <h3>Elem módosítása/paraméterei</h3>
+				 <textarea rows="8" cols="50" id="elemmodositasaSzoveg"><?php
+					require("service/db.php");
+									
+					$sql = "SELECT * FROM sugo WHERE nev='elemmodositasa';";
+					$result = $conn->query($sql);
+					
+					while($row = mysqli_fetch_array($result)){
+						echo $row['szoveg'];
+					}
+				 ?></textarea> <br/>
+				 <button class="sugoFelkuldes" id="elemmodositasa">Súgó felküldése</button>
 				 <h3>Lista - rendezés</h3>
 				 <textarea rows="8" cols="50" id="rendezesSzoveg"><?php
 					require("service/db.php");

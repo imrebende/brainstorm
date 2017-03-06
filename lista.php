@@ -46,93 +46,106 @@ if(isset($_POST['ujElem'])){
 } else if(isset($_POST['insert'])){
 	//Új elem beszúrása
 	require("service/db.php");
+	
+	//Ha van ilyen akkor nem csinálunk semmit
+	$sqlCheck = "SELECT * FROM elemek WHERE elem_neve='" . $_POST['szempont'] . "' AND lista_neve='" . $_COOKIE['tema'] . "';";
+	$resultCheck = $conn->query($sqlCheck);
+	
+	if($resultCheck->num_rows == 0){	
+		if(!isset($_POST['szulo'])) $_POST['szulo'] = "";
 		
-	if(!isset($_POST['szulo'])) $_POST['szulo'] = "";
-	
-	$sql = "INSERT INTO elemek (lista_neve, elem_neve, szulo_neve)
-			VALUES ('" . $_COOKIE['tema'] . "','" . $_POST['szempont'] . "','" . $_POST['szulo'] . "');";
-			
-	$result = $conn->query($sql);
-	
-	//Ha van gyereke, akkor töröljük a paramétereit
-			$sqlChange = "UPDATE elemek
-				SET kizaro_ertek='', idealis_ertek='', fuggveny_ertek='', dimenzio=''
-				WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['szulo'] . "';";
-			$resultChange = $conn->query($sqlChange);
-} else if(isset($_POST['update'])){
-	//Új elem beszúrása
-	require("service/db.php");
-	
-	if(isset($_POST['dimenzio'])){
-		if($_POST['dimenzio'] == "pont" || $_POST['dimenzio'] == "Pont"){
-			$_POST['fvErtek'] = '1';
-			$_POST['idErtek'] = '9';
-			$_POST['kizErtek'] = '0';
-		} else if($_POST['dimenzio'] == "I/N"){
-			$_POST['fvErtek'] = '1';
-			$_POST['idErtek'] = '1';
-			$_POST['kizErtek'] = '0';
-		}
-	}
-	
-	if(!isset($_POST['kizErtek'])){
-		$_POST['kizErtek'] = '';
-	}
-	if(!isset($_POST['idErtek'])){
-		$_POST['idErtek'] = '';
-	}
-	if(!isset($_POST['fvErtek'])){
-		$_POST['fvErtek'] = '';
-	}
-	if(!isset($_POST['dimenzio'])){
-		$_POST['dimenzio'] = '';
-	}
-	
-	if(isset($_POST['regiszempont'])){
-		$sql = "UPDATE elemek
-		SET elem_neve='" . $_POST['szempont'] . "', kizaro_ertek='" . $_POST['kizErtek'] . "', idealis_ertek='" . $_POST['idErtek'] . "', fuggveny_ertek='" . $_POST['fvErtek'] . "', dimenzio='" . $_POST['dimenzio'] . "'
-		WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['regiszempont'] . "';";
+		$sql = "INSERT INTO elemek (lista_neve, elem_neve, szulo_neve)
+				VALUES ('" . $_COOKIE['tema'] . "','" . $_POST['szempont'] . "','" . $_POST['szulo'] . "');";
+				
+		$result = $conn->query($sql);
 		
-		//Gyerek elemek átírása
-		if($_POST['regiszempont'] != $_POST['szempont']){
-			$sqlParent = "UPDATE elemek
-			SET szulo_neve='" . $_POST['szempont'] . "'
-			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND szulo_neve='" . $_POST['regiszempont'] . "';";
-			$resultParent = $conn->query($sqlParent);
-			
-			//Rendezés, súlyozás átírása
-			$sqlParent = "UPDATE rangsorpontok
-			SET elem_neve='" . $_POST['szempont'] . "
-			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['regiszempont'] . "';";
-			$resultParent = $conn->query($sqlParent);
-			
-			$sqlParent = "UPDATE sulypontok
-			SET elem_neve='" . $_POST['szempont'] . "
-			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['regiszempont'] . "';";
-			$resultParent = $conn->query($sqlParent);
-		}
-		
-		/*if(isset($_POST['suly'])){
-			$sqlUpdateSuly = "UPDATE sulypontok
-			SET sulypont='" . $_POST['suly'] . "'
-			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['szempont'] . "';";
-			$resultUpdateSuly = $conn->query($sqlUpdateSuly);
-		}*/
-	} else {
-		$sql = "UPDATE elemek
-			SET kizaro_ertek='" . $_POST['kizErtek'] . "', idealis_ertek='" . $_POST['idErtek'] . "', fuggveny_ertek='" . $_POST['fvErtek'] . "', dimenzio='" . $_POST['dimenzio'] . "'
-			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['szempont'] . "';";
-	}
-	$result = $conn->query($sql);
-	
-	//Ha van gyereke, akkor töröljük a paramétereit
-	$isParentSql = "SELECT * FROM elemek WHERE lista_neve='" . $_COOKIE['tema'] . "' AND szulo_neve='" . $_GET['elem'] . "';";
-	$resultisParentSql = $conn->query($isParentSql);
-	if($resultisParentSql->num_rows > 0){
+		//Ha van gyereke, akkor töröljük a paramétereit
 		$sqlChange = "UPDATE elemek
 			SET kizaro_ertek='', idealis_ertek='', fuggveny_ertek='', dimenzio=''
 			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['szulo'] . "';";
 		$resultChange = $conn->query($sqlChange);
+	}
+} else if(isset($_POST['update'])){
+	//Új elem beszúrása
+	require("service/db.php");
+	
+	//Ha van ilyen akkor nem csinálunk semmit
+	$sqlCheck = "SELECT * FROM elemek WHERE elem_neve='" . $_POST['szempont'] . "' AND lista_neve='" . $_COOKIE['tema'] . "';";
+	$resultCheck = $conn->query($sqlCheck);
+	
+	if($resultCheck->num_rows == 0 || $_POST['regiszempont'] == $_POST['szempont']){	
+	
+		if(isset($_POST['dimenzio'])){
+			if($_POST['dimenzio'] == "pont" || $_POST['dimenzio'] == "Pont"){
+				$_POST['fvErtek'] = '1';
+				$_POST['idErtek'] = '9';
+				$_POST['kizErtek'] = '0';
+			} else if($_POST['dimenzio'] == "I/N"){
+				$_POST['fvErtek'] = '1';
+				$_POST['idErtek'] = '1';
+				$_POST['kizErtek'] = '0';
+			}
+		}
+		
+		if(!isset($_POST['kizErtek'])){
+			$_POST['kizErtek'] = '';
+		}
+		if(!isset($_POST['idErtek'])){
+			$_POST['idErtek'] = '';
+		}
+		if(!isset($_POST['fvErtek'])){
+			$_POST['fvErtek'] = '';
+		}
+		if(!isset($_POST['dimenzio'])){
+			$_POST['dimenzio'] = '';
+		}
+		
+		if(isset($_POST['regiszempont'])){
+			$sql = "UPDATE elemek
+			SET elem_neve='" . $_POST['szempont'] . "', kizaro_ertek='" . $_POST['kizErtek'] . "', idealis_ertek='" . $_POST['idErtek'] . "', fuggveny_ertek='" . $_POST['fvErtek'] . "', dimenzio='" . $_POST['dimenzio'] . "'
+			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['regiszempont'] . "';";
+			
+			//Gyerek elemek átírása
+			if($_POST['regiszempont'] != $_POST['szempont']){
+				$sqlParent = "UPDATE elemek
+				SET szulo_neve='" . $_POST['szempont'] . "'
+				WHERE lista_neve='" . $_COOKIE['tema'] . "' AND szulo_neve='" . $_POST['regiszempont'] . "';";
+				$resultParent = $conn->query($sqlParent);
+				
+				//Rendezés, súlyozás átírása
+				$sqlParent = "UPDATE rangsorpontok
+				SET elem_neve='" . $_POST['szempont'] . "
+				WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['regiszempont'] . "';";
+				$resultParent = $conn->query($sqlParent);
+				
+				$sqlParent = "UPDATE sulypontok
+				SET elem_neve='" . $_POST['szempont'] . "
+				WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['regiszempont'] . "';";
+				$resultParent = $conn->query($sqlParent);
+			}
+			
+			/*if(isset($_POST['suly'])){
+				$sqlUpdateSuly = "UPDATE sulypontok
+				SET sulypont='" . $_POST['suly'] . "'
+				WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['szempont'] . "';";
+				$resultUpdateSuly = $conn->query($sqlUpdateSuly);
+			}*/
+		} else {
+			$sql = "UPDATE elemek
+				SET kizaro_ertek='" . $_POST['kizErtek'] . "', idealis_ertek='" . $_POST['idErtek'] . "', fuggveny_ertek='" . $_POST['fvErtek'] . "', dimenzio='" . $_POST['dimenzio'] . "'
+				WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['szempont'] . "';";
+		}
+		$result = $conn->query($sql);
+		
+		//Ha van gyereke, akkor töröljük a paramétereit
+		$isParentSql = "SELECT * FROM elemek WHERE lista_neve='" . $_COOKIE['tema'] . "' AND szulo_neve='" . $_GET['elem'] . "';";
+		$resultisParentSql = $conn->query($isParentSql);
+		if($resultisParentSql->num_rows > 0){
+			$sqlChange = "UPDATE elemek
+				SET kizaro_ertek='', idealis_ertek='', fuggveny_ertek='', dimenzio=''
+				WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_POST['szulo'] . "';";
+			$resultChange = $conn->query($sqlChange);
+		}
 	}
 } else if(isset($_GET['torol'])){
 	//Elem törlése
@@ -182,6 +195,7 @@ if(isset($_POST['ujElem'])){
 			//Rendezhetőség JS
 			while($row = mysqli_fetch_array($result)){
 				$GLOBALS["allapot"] = $row['allapot'];
+				$GLOBALS["is_archived"] = $row['is_archived'];
 				if($row['allapot'] == "rendezes"){
 					echo '<script>
 					  $( function() {
@@ -246,10 +260,12 @@ if(isset($_POST['ujElem'])){
 				
 				if($GLOBALS["allapot"] == "kesz"){
 					if(!isset($_GET['szakerto'])) $_GET['szakerto'] = 0;
-					echo '<br/>';
-					echo '<a id="prevButton" class="btn" href="lista.php?szakerto='; echo $_GET['szakerto'] - 1 . '"> &lt; </a>';
-					echo '<span style="font-size: 18px;" id="userName"></span>';
-					echo '<a id="nextButton" class="btn" href="lista.php?szakerto='; echo $_GET['szakerto'] + 1 . '"> &gt; </a> <span style="font-size: 16px;">súlyszámai</span>';
+					if($_COOKIE["usertype"] == "admin"){
+						echo '<br/>';
+						echo '<a id="prevButton" class="btn" href="lista.php?szakerto='; echo $_GET['szakerto'] - 1 . '"> &lt; </a>';
+						echo '<span style="font-size: 18px;" id="userName"></span>';
+						echo '<a id="nextButton" class="btn" href="lista.php?szakerto='; echo $_GET['szakerto'] + 1 . '"> &gt; </a> <span style="font-size: 16px;">súlyszámai</span>';
+					}
 				}
 			?></h3>
 			<ul id="sortable">
@@ -305,6 +321,7 @@ if(isset($_POST['ujElem'])){
 						$label = "[";
 						$i = 0;
 						$GLOBALS["elemek"] = [];
+						$maxSuly = 0;
 						while($row = mysqli_fetch_array($result)){
 							if(!isset($_GET['elem'])) $_GET['elem'] = "";
 							if ($GLOBALS["allapot"] == "uj" || $GLOBALS["allapot"] == "rendezes"){
@@ -320,6 +337,9 @@ if(isset($_POST['ujElem'])){
 								$GLOBALS["elemek"][$i] = $row['elem_neve'];
 								$GLOBALS["sulyok"][$i] = $row['sulypont'];
 								$i++;
+								if($maxSuly < round($row['sulypont'], 1)){
+									$maxSuly = round($row['sulypont'], 1);
+								}
 							} else if($GLOBALS["allapot"] == "kesz"){
 								$elemek[$i] = new Elem();
 								$elemek[$i]->nev = $row['elem_neve'];
@@ -338,6 +358,7 @@ if(isset($_POST['ujElem'])){
 							$sqlSelect = "SELECT elemek.elem_neve as elem_neve, SUM(rangsorpontok.pontszam) as pontszam, elemek.szulo_neve FROM elemek LEFT JOIN rangsorpontok ON elemek.elem_neve = rangsorpontok.elem_neve AND elemek.lista_neve = rangsorpontok.lista_neve WHERE elemek.lista_neve='" . $_COOKIE['tema'] . "' AND elemek.szulo_neve='" . $_GET['elem'] . "' GROUP BY elemek.elem_neve ORDER BY pontszam ASC;";
 							$resultSelect = $conn->query($sqlSelect);
 							$i = 0;
+							$maxSuly = 0;
 							while($row = mysqli_fetch_array($resultSelect)){
 								$label .= "'" . $row['elem_neve'] . "',";
 								$sulypont = (100 * (0.7 - 1)) / ((pow(0.7, $resultSelect->num_rows)) - 1) * (pow(0.7, $i));
@@ -346,6 +367,9 @@ if(isset($_POST['ujElem'])){
 								$GLOBALS["elemek"][$i] = $row['elem_neve'];
 								$GLOBALS["sulyok"][$i] = round($sulypont, 1);
 								$i++;
+								if($maxSuly < round($sulypont, 1)){
+									$maxSuly = round($sulypont, 1);
+								}
 							}
 						}
 						
@@ -380,7 +404,7 @@ if(isset($_POST['ujElem'])){
 										display: false
 									},
 									scales: {
-										yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: 90 ,
+										yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: ' . intval($maxSuly + 5) . ' ,
            callback: function(value) {
                return value + "%"
            }} }, ],
@@ -405,7 +429,7 @@ if(isset($_POST['ujElem'])){
 					echo "</tr></table>";
 				}
 				
-				if($GLOBALS["allapot"] == "kesz" && $GLOBALS['usertype'] == "admin"){
+				if($GLOBALS["allapot"] == "kesz" && $_COOKIE['usertype'] == "admin"){
 					//Sorok összerakása
 					$sorok = "";
 					$j = 0;
@@ -459,6 +483,7 @@ if(isset($_POST['ujElem'])){
 					$szakertoSzuloSulyok = [];
 					$diagrammLabel = "[";
 					$diagrammValue = "[";
+					$maxValue = 0;
 					
 					while($kiirtakSzama < $i){
 						if($elemek[$j]->voltMar == false && $elemek[$j]->szulo == $adottSzulo){
@@ -495,7 +520,7 @@ if(isset($_POST['ujElem'])){
 										$szakertoSzuloSulyok[$adottSzuloSzintje] = round($row['sulypont'], 1);
 										if($resultIsParent->num_rows == 0) $kivalasztottSzakertoPontszamai .= $szakertoSulyszama . ", ";
 									}
-									$kiszamoltErtek += pow($row['sulypont'] - $elemek[$j]->sulyszam, 2);
+									$kiszamoltErtek += pow(($row['sulypont'] - $elemek[$j]->sulyszam) / 100, 2);
 									$pontSzamok[$k] = $row['sulypont'];
 									$ossz += $row['sulypont'];
 								}
@@ -506,6 +531,9 @@ if(isset($_POST['ujElem'])){
 							if($sulyszam != 0){
 								$diagrammLabel .= "'" . $elemek[$j]->nev . "', ";
 								$diagrammValue .= $sulyszam . ", ";
+								if($maxValue < $sulyszam){
+									$maxValue = $sulyszam;
+								}
 							}
 							
 							$adottSzuloLabel = $adottSzulo;
@@ -520,7 +548,7 @@ if(isset($_POST['ujElem'])){
 							}
 							$diagramoknakValue[$adottSzuloLabel] .= $elemek[$j]->sulyszam . ",";
 							
-							$egyetertesiAllando = 1 - round(sqrt((1 / ($usersNumber - 1)) * $kiszamoltErtek), 1);
+							$egyetertesiAllando = 1 - round(sqrt((1 / ($usersNumber - 1)) * ($kiszamoltErtek)), 1);
 							
 							$sorok .= "<tr>
 								<td class='szint" . $adottSzuloSzintje . "'>" . $elemek[$j]->nev ."</td>"
@@ -594,12 +622,18 @@ if(isset($_POST['ujElem'])){
 							<canvas id="chartContainer"></canvas>
 						</div>';
 						
+						if($_GET['szakerto'] >= $usersNumber + 1 || $_GET['szakerto'] <= 0){
+							$color = "red";
+						} else {
+							$color = "blue";
+						}
+						
 						echo '<script>
 							var data = {
 								labels:' . $diagrammLabel . ',
 								datasets: [
 									{
-										backgroundColor: "blue",
+										backgroundColor: "' . $color . '",
 										data:' . $diagrammValue . '
 									}, ' . $kivalasztottUserAdatok . '
 								]
@@ -617,7 +651,7 @@ if(isset($_POST['ujElem'])){
 										display: false
 									},
 									scales: {
-										yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: 90 ,
+										yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: ' . intval($maxValue + 5) . ' ,
 										   callback: function(value) {
 											   return value + "%"
 										   }} }, ],
@@ -630,6 +664,8 @@ if(isset($_POST['ujElem'])){
 
 						</script>';
 					//}
+				} else if($GLOBALS["allapot"] == "kesz"){
+					echo "<h4>Köszönöm a részvételt! (Részletes értékelés e-mailen)</h4>";
 				}
 				
 				?>
@@ -932,7 +968,13 @@ if(isset($_POST['ujElem'])){
 				if($GLOBALS["allapot"] == "rendezes"){
 					$sql = "SELECT elemek.elem_neve, elemek.szulo_neve FROM elemek LEFT JOIN (SELECT * FROM rangsorpontok WHERE userid='" . $_COOKIE['user'] . "') as rangsorpontok ON rangsorpontok.lista_neve=elemek.lista_neve AND rangsorpontok.elem_neve=elemek.elem_neve WHERE elemek.lista_neve='" . $_COOKIE['tema'] . "' ORDER BY rangsorpontok.pontszam ASC;";
 				} else if($GLOBALS["allapot"] == "skalazas"){
-					$sql = "SELECT elemek.elem_neve, elemek.szulo_neve FROM elemek LEFT JOIN (SELECT * FROM sulypontok WHERE userid='" . $_COOKIE['user'] . "') as sulypontok ON sulypontok.lista_neve=elemek.lista_neve AND sulypontok.elem_neve=elemek.elem_neve WHERE elemek.lista_neve='" . $_COOKIE['tema'] . "' ORDER BY sulypontok.sulypont DESC;";
+					$sql = "SELECT elemek.elem_neve, elemek.szulo_neve, rpontok.rpontszam 
+						FROM elemek 
+						LEFT JOIN (SELECT * FROM sulypontok 
+							WHERE userid='" . $_COOKIE['user'] . "') as sulypontok ON sulypontok.lista_neve=elemek.lista_neve AND sulypontok.elem_neve=elemek.elem_neve 
+						LEFT JOIN (SELECT elem_neve, SUM(pontszam) as rpontszam, lista_neve from rangsorpontok GROUP BY elem_neve) as rpontok ON rpontok.lista_neve=elemek.lista_neve AND rpontok.elem_neve=elemek.elem_neve 
+						WHERE elemek.lista_neve='" . $_COOKIE['tema'] . "' 
+						ORDER BY sulypontok.sulypont DESC, rpontok.rpontszam ASC;";
 					//echo $sql;
 				}
 				
@@ -1139,7 +1181,7 @@ if(isset($_POST['ujElem'])){
 					display: false
 				},
 				scales: {
-					yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: 90 ,
+					yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: parseInt(Math.max.apply(Math, dataArray)) + 5 ,
            callback: function(value) {
                return value + "%"
            } } }, ],

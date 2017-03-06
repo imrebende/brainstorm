@@ -21,6 +21,10 @@
 		stream_copy_to_stream($myfile, fopen($output, 'w'));*/
 		$csv = fopen("../archiv/" . iconv("UTF-8", "ISO-8859-2//TRANSLIT", $tema) . ".csv", "w");
 		
+		//is_archived beállítása
+		$sql = "UPDATE listak SET is_archived=true WHERE lista_neve='" . $_COOKIE['tema']  . "';";
+		$result = $conn->query($sql);
+		
 		$sql = "SELECT * FROM elemek LEFT JOIN sulypontok ON elemek.elem_neve = sulypontok.elem_neve AND elemek.lista_neve=sulypontok.lista_neve WHERE elemek.lista_neve='" . $_COOKIE['tema'] . "' ORDER BY sulypontok.sulypont DESC;";
 		$result = $conn->query($sql);
 					
@@ -119,7 +123,7 @@
 					$usersNumber = 0;
 					while($row = mysqli_fetch_array($resultUsers)){
 						if($_COOKIE['usertype'] == "admin" || $_COOKIE['user'] == $row['user']){
-							$usersString .= $row['user'] . ";";
+							$usersString .= $row['user'] . " (" . $row['email'] . ");";
 						}
 						$usersArray[$usersNumber] = $row['user'];
 						$usersNumber++;
@@ -128,7 +132,8 @@
 					$szuloSulyok = [];
 					
 					$kiirando = "";
-					$kiirando .= "Szempont;" . $usersString . "Dimenzió;Kizáró érték;Ideális érték;Függvény típusa;Súly\n";
+					//$kiirando .= "Ág;Alág;Levél;Dimenzió;Kizáró érték;Ideális érték;Függvény típusa;Súly" . $usersString . "\n";
+					$kiirando .= "Ág;Alág;Levél;Dimenzió;Kizáró érték;Ideális érték;" . $usersString . "\n";
 					
 					while($kiirtakSzama < $i){
 						if($elemek[$j]->voltMar == false && $elemek[$j]->szulo == $adottSzulo){
@@ -160,9 +165,19 @@
 							}
 							
 							//$sorok .= "<tr><td class='szint" . $adottSzuloSzintje . "'>" . $elemek[$j]->nev ."</td>" . $pontok . "<td>" . $elemek[$j]->dimenzio . "</td><td>" . $elemek[$j]->kizaro . "</td><td>" . $elemek[$j]->idealis . "</td><td>" . $elemek[$j]->fuggveny . "</td><td>" . $sulyszam . "%</td><td><a class='btn btn-default hidden' href='ujelem.php?elem=" . $elemek[$j]->nev . "'><span class='glyphicon glyphicon-pencil'></span></a></td></tr>";
-							$kiirando .= str_repeat(" ", $adottSzuloSzintje * 2) . $elemek[$j]->nev .";" . $pontok . $elemek[$j]->dimenzio . ";" . $elemek[$j]->kizaro . ";" . $elemek[$j]->idealis . ";" . $elemek[$j]->fuggveny . ";" . $sulyszam . "\n";
+							
+							$nev = "";
+							if($adottSzuloSzintje == 0){
+								$nev = $elemek[$j]->nev . ";;";
+							} else if ($adottSzuloSzintje == 1){
+								$nev = ";" . $elemek[$j]->nev . ";";
+							} else if ($adottSzuloSzintje == 2){
+								$nev = ";;" . $elemek[$j]->nev;
+							}
+							
+							$kiirando .= $nev . ";" . $elemek[$j]->dimenzio . ";" . $elemek[$j]->kizaro . ";" . $elemek[$j]->idealis . /*";" . $elemek[$j]->fuggveny . ";" . $sulyszam . */";" . $pontok . "\n";
 
-											$elemek[$j]->voltMar = true; 
+							$elemek[$j]->voltMar = true; 
 							$adottSzulo = $elemek[$j]->nev;
 							$adottSzuloSzintje++;
 							$j = 0;
