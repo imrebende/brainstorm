@@ -15,6 +15,13 @@
 		
 		//CSV létrehozása
 		require("db.php");
+		
+		$sql = "SELECT * FROM listak WHERE lista_neve='" . $_COOKIE['tema'] . "';";
+		$result = $conn->query($sql);
+
+		while($row = mysqli_fetch_array($result)){
+			$GLOBALS['fmea'] = $row['isfmea'];
+		}
 	
 		/*$myfile = fopen("../archiv/" . iconv("UTF-8", "ISO-8859-1//TRANSLIT", $_COOKIE['tema']) . ".csv", "w");
 		stream_filter_append($myfile, 'convert.iconv.UTF-8/OLD-ENCODING');
@@ -133,7 +140,10 @@
 					
 					$kiirando = "";
 					//$kiirando .= "Ág;Alág;Levél;Dimenzió;Kizáró érték;Ideális érték;Függvény típusa;Súly" . $usersString . "\n";
-					$kiirando .= "Ág;Alág;Levél;Dimenzió;Kizáró érték;Ideális érték;" . $usersString . "\n";
+					if(!$GLOBALS['fmea'])
+						$kiirando .= "Ág;Alág;Levél;Dimenzió;Kizáró érték;Ideális érték;" . $usersString . "\n";
+					else
+						$kiirando .= "Ág;Alág;Levél;Dimenzió;Kizáró érték;Ideális érték;" . $usersString . "\n";
 					
 					while($kiirtakSzama < $i){
 						if($elemek[$j]->voltMar == false && $elemek[$j]->szulo == $adottSzulo){
@@ -145,7 +155,10 @@
 								$resultUserPoint = $conn->query($sqlUserPoint);	
 								while($row = mysqli_fetch_array($resultUserPoint)){
 									if($_COOKIE['usertype'] == "admin" || $_COOKIE['user'] == $usersArray[$k]){
-										$pontok .= round($row['sulypont'], 1) . "%;";
+										if(!$GLOBALS['fmea'])
+											$pontok .= round($row['sulypont'], 1) . "%;";
+										else
+											$pontok .= round($row['sulypont'], 1);
 									}
 									$pontSzamok[$k] = $row['sulypont'];
 									$ossz += $row['sulypont'];

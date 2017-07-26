@@ -1,12 +1,12 @@
 <?php
-	$servername = "localhost";
+	/*$servername = "localhost";
 	$username = "root";
 	$password = "";
-	$dbname = "brainstormingDB";
-	/*$servername = "localhost";
+	$dbname = "brainstormingDB";*/
+	$servername = "localhost";
 	$username = "fmeavoc";
 	$password = "z@htupd-Yx25oldU";
-	$dbname = "fmeavoc";*/
+	$dbname = "fmeavoc";
 	
 	$conn = new mysqli($servername, $username, $password, $dbname);
 	if ($conn->connect_error) {

@@ -1,0 +1,3 @@
+kész -> admin összes, amugy nem
+gyerekek törlése
+egyéni skálázás

@@ -30,9 +30,11 @@ if(isset($_GET['logout'])){
 			}
 		}
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Bejelentkezés</title>
 	<link href="css/bootstrap.min.css" rel="stylesheet" />
 	<link href="css/style.css" rel="stylesheet" />
@@ -63,9 +65,15 @@ if(isset($_GET['logout'])){
 	<?php 	
 		if(isset($_POST['ujTema'])){
 			require("service/db.php");
+			
+			if($_POST['fmea']) $fmea = 1;
+			else $fmea = 0;
 		
-			$sql = "INSERT INTO listak (lista_neve, allapot, jelszo)
-				VALUES ('" . $_POST['ujTema'] . "', 'uj','" . $_POST['password'] . "');";
+			$sql = "UPDATE listak SET active = false";
+			$result = $conn->query($sql);
+		
+			$sql = "INSERT INTO listak (lista_neve, allapot, jelszo, isfmea, active)
+				VALUES ('" . $_POST['ujTema'] . "', 'uj','" . $_POST['password'] . "','" . $fmea . "', true);";
 			$result = $conn->query($sql);
 					
 		}
@@ -112,6 +120,11 @@ if(isset($_GET['logout'])){
 						<label for="password">Jelszó: </label>
 						<input type="password" id="password" name="password" maxlength="20" class="form-control">
 					</div>
+					<div class="form-group">
+						<label>
+						  <input id="fmea" name="fmea" type="checkbox" style="width: initial;"> <span style="margin-left: 10px;padding-bottom: 5px;vertical-align: middle;">FMEA</span>
+						</label>
+					</div>
 					<button class="btn btn-info" type="button" onclick="regSugo()">?</button>
 					<button class="btn btn-success" type="submit" name="listaGomb">Tovább<span class="glyphicon glyphicon-chevron-right margin-left"></span></button>
 					<button class="btn btn-success" type="submit"><span class="glyphicon glyphicon-plus margin-right"></span>Létrehozás</button>
@@ -146,6 +159,7 @@ if(isset($_GET['logout'])){
 										$pw = "<span class='hidden pw'>" . $row['jelszo'] . "</span>";
 										echo "<td>" . $statusz . $pw . "</td>";
 										echo "<td style='text-align: center;'>
+												<button class='btn btn-success cimekButton' type='button' id='" . $row['lista_neve'] . "Cimek'>Címek</button> 
 												<button class='btn btn-success szakertokButton' type='button' id='" . $row['lista_neve'] . "Szakertok'>Szakértők</button> 
 												<button class='btn btn-success ujJelszoButton' type='button' id='" . $row['lista_neve'] . "Jelszo'>Új jelszó</button> 
 												<button class='btn btn-danger removeButton' type='button' id='" . $row['lista_neve'] . "'>Törlés</button>
@@ -249,6 +263,10 @@ if(isset($_GET['logout'])){
 		
 		$('.szakertokButton').click(function(){
 			window.location.href = "szakertok.php?tema=" + $(this).context.id.replace("Szakertok", "");
+		});
+		
+		$('.cimekButton').click(function(){
+			window.location.href = "cimek.php?tema=" + $(this).context.id.replace("Cimek", "");
 		});
 		
 		$('.openButton').click(function(){

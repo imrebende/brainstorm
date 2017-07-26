@@ -130,7 +130,83 @@
 					}
 				 ?></textarea> <br/>
 			<button class="sugoFelkuldes" id="kesz">Súgó felküldése</button>
+			
+			<h2>FMEA súgók</h2>
+			
+				 <h3>Lista - új</h3>
+				 <textarea rows="8" cols="50" id="fmeaujSzoveg"><?php
+					require("service/db.php");
+									
+					$sql = "SELECT * FROM sugo WHERE nev='fmeauj';";
+					$result = $conn->query($sql);
+					
+					while($row = mysqli_fetch_array($result)){
+						echo $row['szoveg'];
+					}
+				 ?></textarea> <br/>
+				 <button class="sugoFelkuldes" id="fmeauj">Súgó felküldése</button>
+				 <h3>Új elem bevitele</h3>
+				 <textarea rows="8" cols="50" id="fmeaujelemSzoveg"><?php
+					require("service/db.php");
+									
+					$sql = "SELECT * FROM sugo WHERE nev='fmeaujelem';";
+					$result = $conn->query($sql);
+					
+					while($row = mysqli_fetch_array($result)){
+						echo $row['szoveg'];
+					}
+				 ?></textarea> <br/>
+				 <button class="sugoFelkuldes" id="fmeaujelem">Súgó felküldése</button>
+				 <h3>Elem módosítása/paraméterei</h3>
+				 <textarea rows="8" cols="50" id="fmeaelemmodositasaSzoveg"><?php
+					require("service/db.php");
+									
+					$sql = "SELECT * FROM sugo WHERE nev='fmeaelemmodositasa';";
+					$result = $conn->query($sql);
+					
+					while($row = mysqli_fetch_array($result)){
+						echo $row['szoveg'];
+					}
+				 ?></textarea> <br/>
+				 <button class="sugoFelkuldes" id="fmeaelemmodositasa">Súgó felküldése</button>
+				 <h3>Lista - rendezés</h3>
+				 <textarea rows="8" cols="50" id="fmearendezesSzoveg"><?php
+					require("service/db.php");
+									
+					$sql = "SELECT * FROM sugo WHERE nev='fmearendezes';";
+					$result = $conn->query($sql);
+					
+					while($row = mysqli_fetch_array($result)){
+						echo $row['szoveg'];
+					}
+				 ?></textarea> <br/>
+				 <button class="sugoFelkuldes" id="fmearendezes">Súgó felküldése</button>
+				 <h3>Lista - súlyozás</h3>
+				 <textarea rows="8" cols="50" id="fmeasulyozasSzoveg"><?php
+					require("service/db.php");
+									
+					$sql = "SELECT * FROM sugo WHERE nev='fmeasulyozas';";
+					$result = $conn->query($sql);
+					
+					while($row = mysqli_fetch_array($result)){
+						echo $row['szoveg'];
+					}
+				 ?></textarea> <br/>
+			<button class="sugoFelkuldes" id="fmeasulyozas">Súgó felküldése</button>
+			<h3>Lista - kész</h3>
+				 <textarea rows="8" cols="50" id="fmeakeszSzoveg"><?php
+					require("service/db.php");
+									
+					$sql = "SELECT * FROM sugo WHERE nev='fmeakesz';";
+					$result = $conn->query($sql);
+					
+					while($row = mysqli_fetch_array($result)){
+						echo $row['szoveg'];
+					}
+				 ?></textarea> <br/>
+			<button class="sugoFelkuldes" id="fmeakesz">Súgó felküldése</button>
 			</div>
+			
 		</div>
 	</div>
 	<script>

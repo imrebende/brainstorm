@@ -31,7 +31,14 @@
 	<?php require_once('menu.php'); ?>
 
 	<?php
-	echo $_GET['elem'];
+	require("service/db.php");
+	$sql = "SELECT * FROM listak WHERE lista_neve='" . $_COOKIE['tema'] . "';";
+	$result = $conn->query($sql);
+	
+	while($row = mysqli_fetch_array($result)){
+		$GLOBALS['fmea'] = $row['isfmea'];
+	}
+	
 	if(isset($_GET['elem'])){
 			require("service/db.php");
 					
@@ -60,6 +67,15 @@
 								});';
 					} else {
 						echo '$("#szempont").attr("readonly", "readonly");';
+					}
+					
+					if($GLOBALS['fmea']){
+						echo '$(function() {';
+						echo '$("#kizErtek").attr("readonly", "readonly");';
+						echo '$("#idErtek").attr("readonly", "readonly");';
+						echo '$("#fvErtek").attr("readonly", "readonly");';
+						echo '$("#dimenzio").attr("readonly", "readonly");';
+						echo '});';
 					}
 					$sqlTema = "SELECT * FROM listak WHERE lista_neve='" . $_COOKIE['tema'] . "';";
 					$resultTema = $conn->query($sqlTema);
@@ -102,9 +118,17 @@
 		<div class="main">
 			<div class="form">
 				<?php if(isset($_GET['elem'])): ?>
-					<h1>Szempont paraméterei</h1>
+					<?php if(!$GLOBALS["fmea"]): ?>
+						<h1>Paraméterek</h1>
+					<?php else: ?>
+						<h1>Paraméterek</h1>
+					<?php endif; ?>
 				<?php else : ?>
-					<h1>Új szempont hozzáadása</h1>
+					<?php if(!$GLOBALS["fmea"]): ?>
+						<h1>Új szempont hozzáadása</h1>
+					<?php else: ?>
+						<h1>Új elem hozzáadása</h1>
+					<?php endif; ?>
 				<?php endif; ?>
 				<h3>
 				<?php 
@@ -178,7 +202,11 @@
 						</div>
 					<?php endif; ?>-->
 					<button class="btn btn-info" type="button" onclick="regSugo()">?</button>
-					<button class="btn btn-default" name="vissza" onclick="back()"><span class="glyphicon glyphicon-chevron-left margin-right"></span>Szempontok listája</button>
+					<?php if(!$GLOBALS["fmea"]): ?>
+						<button class="btn btn-default" name="vissza" onclick="back()"><span class="glyphicon glyphicon-chevron-left margin-right"></span>Elemek listája</button>
+					<?php else: ?>
+						<button class="btn btn-default" name="vissza" onclick="back()"><span class="glyphicon glyphicon-chevron-left margin-right"></span>Lista</button>
+					<?php endif; ?>
 					<button class="btn btn-default" type="button" onclick="faPopupShow()"><span class="glyphicon glyphicon-tree-conifer margin-right"></span>Fastruktúra</button>
 					<?php
 						if(isset($_GET['elem'])) 
@@ -197,10 +225,20 @@
 			
 				<?php
 					require("service/db.php");
-					if($_GET['elem'])
-						$sql = "SELECT * FROM sugo WHERE nev='elemmodositasa';";
-					else 
-						$sql = "SELECT * FROM sugo WHERE nev='ujelem';";
+					if($_GET['elem']){
+						if($GLOBALS["fmea"]){
+							$sql = "SELECT * FROM sugo WHERE nev='fmeaelemmodositasa';";
+						} else {
+							$sql = "SELECT * FROM sugo WHERE nev='elemmodositasa';";
+						}
+					}
+					else{
+						if($GLOBALS["fmea"]){
+							$sql = "SELECT * FROM sugo WHERE nev='fmeaujelem';";
+						} else {
+							$sql = "SELECT * FROM sugo WHERE nev='ujelem';";
+						}
+					}
 					$result = $conn->query($sql);
 					while($row = mysqli_fetch_array($result)){
 						echo $row['szoveg'];

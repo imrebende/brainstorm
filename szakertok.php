@@ -4,6 +4,7 @@
 	<title>Szakértők</title>
 	<link href="css/bootstrap.min.css" rel="stylesheet" />
 	<link href="css/style.css" rel="stylesheet" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
@@ -16,8 +17,9 @@
 			
 				require("service/db.php");
 			
-				$sql = 'SELECT rangsorpontok.userid, email FROM rangsorpontok, users WHERE rangsorpontok.userid=users.userid
-AND rangsorpontok.lista_neve="' . $_GET['tema'] . '" UNION SELECT sulypontok.userid, email FROM sulypontok, users WHERE sulypontok.userid = users.userid AND sulypontok.lista_neve="' . $_GET['tema'] . '";';
+				$sql = 'SELECT rangsorpontok.userid, email FROM rangsorpontok, users WHERE rangsorpontok.userid=users.userid AND rangsorpontok.lista_neve="' . $_GET['tema'] . 
+					   '" UNION SELECT sulypontok.userid, email FROM sulypontok, users WHERE sulypontok.userid = users.userid AND sulypontok.lista_neve="' . $_GET['tema'] . 
+					   '" UNION SELECT elemek.creator, email FROM elemek, users WHERE elemek.creator = users.userid AND elemek.lista_neve="' . $_GET['tema'] . '";';
 				$result = $conn->query($sql);
 				
 				echo "<table class='table'>";

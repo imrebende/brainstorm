@@ -1,0 +1,400 @@
+ $(document).ready(function(){
+    $("body").bind('keypress', function(e) {
+      var code = (e.KeyCode ? e.keyCode : e.which);
+        if(code==13) {
+          get();
+        }
+  });
+ });
+ <!---->
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Lista nézet</title>
+	<link href="http://rem.fmea.hu/voc/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="http://rem.fmea.hu/voc/css/jquery-ui.min.css" rel="stylesheet" />
+	<link href="http://rem.fmea.hu/voc/css/jquery-ui.structure.min.css" rel="stylesheet" />
+	<link href="http://rem.fmea.hu/voc/css/jquery-ui.theme.min.css" rel="stylesheet" />
+	<link href="http://rem.fmea.hu/voc/css/style.css" rel="stylesheet" />
+	<style>
+		#sortable ul { list-style-type: none; margin: 0; padding: 0; margin-bottom: 10px; }
+		#sortable li { list-style-type: none; margin: 5px; padding: 5px; width: 150px; }
+	</style>
+	<script src="http://rem.fmea.hu/voc/js/jquery.js"></script>
+	<script src="http://rem.fmea.hu/voc/js/jquery-ui.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+	<script type="text/javascript" src="http://rem.fmea.hu/voc/js/script.js"></script>
+	
+		
+</head>
+<body>
+	<nav class="navbar navbar-inverse navbar-fixed-top">
+		  <div class="container">
+			<div class="navbar-header">
+			  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			  </button>
+			  <a class="navbar-brand" href="#">Voice of Customer</a>
+			</div>
+			<div id="navbar" class="navbar-collapse collapse">
+			  <ul class="nav navbar-nav"><li id="lista"><a href="bejelentkezes.php">Téma választása</a></li>
+		<li id="archivum"><a href="archivum.php">Archívum</a></li>
+		<li id="user"><a href="bejelentkezes.php?logout=a">Kijelentkezés</a></li><li id="sugo"><a href="sugo.php">Súgók kezelése</a></li></ul>
+			</div>
+		  </div>
+		</nav>	<div class="container margin-top">
+		<div class="main">
+			<h3>Kerékpár</h3>
+			<ul id="sortable">
+				<script>
+							var data = {
+								labels:['Esztétika','Súly','Váló fokozatok száma',],
+								datasets: [
+									{
+										backgroundColor: "blue",
+										data:[45.662100456621,31.963470319635,22.374429223744,]
+									}
+								]
+							};
+							window.onload = function() {
+							var ctx = document.getElementById("chartContainer").getContext("2d");
+							ctx.canvas.width = 1140;
+							ctx.canvas.height = 300;
+							window.myBar = new Chart(ctx, {
+								type: "bar",
+								data: data,
+								options: {
+									onClick: function(e){
+										window.location.href = "lista.php?elem=" + this.getElementAtEvent(e)[0]._model.label;
+									},
+									maintainAspectRatio: true,
+									responsive: true,
+									legend: {
+										display: false
+									},
+									scales: {
+										yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: 90 ,
+           callback: function(value) {
+               return value + "%"
+           }} }, ],
+		   xAxes: [{
+                display: false
+            }]
+									}
+								}
+							});
+
+						};
+						</script></ul><table style='margin-left:40px;'><tr><td style='width:366.66666666667px;'><button class='btn btn-default upButton' id='EsztétikaUp' style='width: 80%;'><span class='glyphicon glyphicon-chevron-up'></span></button></td><td style='width:366.66666666667px;'><button class='btn btn-default upButton' id='SúlyUp' style='width: 80%;'><span class='glyphicon glyphicon-chevron-up'></span></button></td><td style='width:366.66666666667px;'><button class='btn btn-default upButton' id='Váló fokozatok számaUp' style='width: 80%;'><span class='glyphicon glyphicon-chevron-up'></span></button></td></tr></table>				
+						<form action="lista.php" method="post" id="lista">
+				<input type="text" id="szulo" name="szulo" maxlength="40" class="form-control hidden" value="">															<div id="container" style="height: 300px; width: 100%;">
+							<canvas id="chartContainer"></canvas>
+						</div>
+						<table style='margin-left:40px; margin-bottom:35px;'><tr><td style='width:366.66666666667px;'><button type='button' class='btn btn-default downButton' id='EsztétikaDown' style='width: 80%;'><span class='glyphicon glyphicon-chevron-down'></span></button></td><td style='width:366.66666666667px;'><button type='button' class='btn btn-default downButton' id='SúlyDown' style='width: 80%;'><span class='glyphicon glyphicon-chevron-down'></span></button></td><td style='width:366.66666666667px;'><button type='button' class='btn btn-default downButton' id='Váló fokozatok számaDown' style='width: 80%;'><span class='glyphicon glyphicon-chevron-down'></span></button></td></tr><tr><td style='padding-top:20px;width:366.66666666667px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='Esztétika' style='text-align: center;' value='45.662100456621' /><span class='input-group-addon'>%</span></div></td><td style='padding-top:20px;width:366.66666666667px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='Súly' style='text-align: center;' value='31.963470319635' /><span class='input-group-addon'>%</span></div></td><td style='padding-top:20px;width:366.66666666667px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='Váló fokozatok száma' style='text-align: center;' value='22.374429223744' /><span class='input-group-addon'>%</span></div></td></tr></table>												<button class="btn btn-info" type="button" onclick="regSugo()"><span class="glyphicon glyphicon-info-sign margin-right"></span>Súgó</button>
+						<button class="btn btn-default" type="button" onclick="faPopupShow()"><span class="glyphicon glyphicon-tree-conifer margin-right"></span>Fastruktúra</button>
+						<button class="btn btn-success" type="button" name="sortChartSend" onClick="skalazottListaBekuldese()">Súlyozott lista beküldése</button>
+						<button class="btn btn-danger" type="button" name="skalaClose" onclick="sulyozasEllenorzesPopupNyitas()">Súlyozás lezárása<span class="margin-left glyphicon glyphicon-off"></span></button>
+												</form>
+		</div>
+	</div>
+	
+	<div class="sugo hidden">
+		<div class="layer"></div>
+		<div class="alert alert-info" role="alert">
+			<h1>Súgó</h1>
+							<p>Súgó a súlyozásra</p>
+						<button class="btn btn-danger" onClick="sugoBezaras()"><span class="glyphicon glyphicon-remove margin-right"></span>Bezárás</button>
+		</div>
+	</div>
+	
+	<div class="torlesPopupClass hidden">
+		<div class="layer"></div>
+		<div class="alert alert-info" role="alert">
+			<h3>FIGYELMEZTETÉS!</h3>
+			<p>Biztosan törölni akarja a témához tartozó összes bejegyzést?</p>
+			<button class="btn btn-success" onClick="torles()"><span class="glyphicon glyphicon-ok margin-right"></span>Igen</button>
+			<button class="btn btn-danger" onClick="torlesPopupBezaras()"><span class="glyphicon glyphicon-remove margin-right"></span>Nem</button>
+		</div>
+	</div>
+	
+	<div class="archivalasPopup hidden">
+		<div class="layer"></div>
+		<div class="alert alert-info" role="alert">
+			<h3>FIGYELMEZTETÉS!</h3>
+			<p>Az archíválás megtörtént!</p>
+			<button class="btn btn-success" onClick="archivalasPopupBezaras()">Rendben</button>
+		</div>
+	</div>
+	
+		
+			<div class="sulyozasrakerultPopup hidden">
+			<div class="layer"></div>
+			<div class="alert alert-info" role="alert">
+				<h3>FIGYELMEZTETÉS!</h3>
+				<p>Az súlyozás megtörtént!</p>
+				<button class="btn btn-success" onClick="sulyozasrakerultPopupBezaras()">Rendben</button>
+			</div>
+		</div>
+		
+		<div class="sulyozasEllenorzesPopup popup hidden">
+			<div class="layer"></div>
+			<div class="alert alert-info" role="alert">
+				<h3>Egyetértési együttható</h3>
+				<p>Összhang: 0<br/>Harmónia: 0<br/>Szin: 0<br/>Első váltó: 0<br/>Súly: 0<br/>Váló fokozatok száma: 0<br/>Forma: 0<br/>Hátsó váltó: 0<br/>Esztétika: 0<br/>Egyetértés a teljes súlyrendszernél: 0</p>
+				<p>Biztosan lezárja a súlyozást?</p>
+				<form method="post" action="lista.php"><button class="btn btn-success" name="skalaClose" name="skalaClose"><span class="glyphicon glyphicon-ok margin-right"></span>Igen</button>
+				<button class="btn btn-danger" onClick="popupBezaras()" type="button"><span class="glyphicon glyphicon-remove margin-right"></span>Nem</button></form>
+			</div>
+		</div>
+		
+	<div class="fapopup hidden">
+		<div class="layer"></div>
+		<div class="alert alert-info" role="alert">
+			<h3>Kerékpár fa struktúrája</h3>
+			<div class="fastruktura">
+			<span><a href='lista.php'> Kerékpár</a></span><br/><span class='szint1'>&rarr; <a href='lista.php?elem=Súly'>Súly</a></span><br/><span class='szint1'>&rarr; <a href='lista.php?elem=Esztétika'>Esztétika</a></span><br/><span class='szint2'>&rarr; <a href='lista.php?elem=Szin'>Szin</a></span><br/><span class='szint2'>&rarr; <a href='lista.php?elem=Forma'>Forma</a></span><br/><span class='szint2'>&rarr; <a href='lista.php?elem=Harmónia'>Harmónia</a></span><br/><span class='szint2'>&rarr; <a href='lista.php?elem=Összhang'>Összhang</a></span><br/><span class='szint1'>&rarr; <a href='lista.php?elem=Váló fokozatok száma'>Váló fokozatok száma</a></span><br/><span class='szint2'>&rarr; <a href='lista.php?elem=Első váltó'>Első váltó</a></span><br/><span class='szint2'>&rarr; <a href='lista.php?elem=Hátsó váltó'>Hátsó váltó</a></span><br/>			</div>
+			<button class="btn btn-danger" onClick="faPopUpBezaras()"><span class="glyphicon glyphicon-remove margin-right"></span>Bezárás</button>
+		</div>
+	</div>
+	
+	<script>	
+	function strip(html){
+	   var tmp = document.createElement("DIV");
+	   tmp.innerHTML = html;
+	   return tmp.textContent || tmp.innerText || "";
+	}
+	
+	function rendezettListaBekuldese(){
+		var list = document.getElementById('sortable').childNodes;
+		var theArray = [];
+		for(var i=0;i < list.length; i++) {
+			var arrValue = list[i].innerHTML;
+			theArray.push(strip(arrValue));
+		}
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("demo").innerHTML = this.responseText;
+			}
+		};
+		xhttp.open("GET", "service/pointsave.php?list=" + theArray, true);
+		xhttp.send();
+	}
+	
+	function skalazottListaBekuldese(){
+		var i = 0, elozoErtek, ossz = 0, values = [], labels = [], l = true;
+		$(".ertekInputok").each(function(index){
+		  labels.push($(this).context.id);
+		  values.push($(this).val());
+		  if(i == 0){
+			  elozoErtek = parseInt($(this).val());
+		  } else if(elozoErtek <= parseInt($(this).val())){
+			  l = false;
+		  }
+		  ossz += parseInt($(this).val());
+		  i++;
+		});
+		//if(ossz == 100){
+			if(l){
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						//document.getElementById("demo").innerHTML = this.responseText;
+					}
+				};
+				xhttp.open("GET", "service/scalasave.php?labels=" + labels + "&values=" + values, true);
+				xhttp.send();
+				$(".sulyozasrakerultPopup").removeClass("hidden");
+			} else {
+				alert("Az oszlopok értékeinek sorrendje nem változhat. Kérem adja meg úgy az értékeket, hogy a sorrend nem változik!")
+			}
+		/*} else {
+			alert("Az oszlopok összege nem 100. Kérem adja meg úgy az adatok, hogy 100 maradjon!");
+		}*/
+		
+	}
+	
+	function helyreallitas(id, regiErtek, ujErtek){
+		/*console.log(id);
+		var ossz = 0, kulonbseg, i = 0;
+		$(".ertekInputok").each(function(index){
+		  ossz += parseFloat($(this).val());
+		  i++;
+		});
+		
+		kulonbseg = (parseFloat(ossz)- 100) / 100;*/
+		
+		var i = 0;
+		var l = true;
+		var elozoErtek = 0;
+		$(".ertekInputok").each(function(index){
+		  if(i == 0){
+			  
+		  } else if(elozoErtek <= parseInt($(this).val())){
+			  l = false;
+		  }
+		  elozoErtek = parseInt($(this).val());
+		  i++;
+		});
+		
+		if(l){
+			$(".ertekInputok").each(function(index){
+				if($(this).context.id != id){
+					var tmp = parseFloat($(this).val());
+					tmp = tmp * (100 - ujErtek) / (100 - regiErtek);
+					tmp = tmp.toFixed(1);
+					$(this).val(tmp);
+				}
+			});
+		} else {
+			$("#" + id).val(regiErtek);
+		}
+	}
+	
+	function changeCanvas(dataArray){
+		$('#chartContainer').remove();
+		$('#container').append('<canvas id="chartContainer"><canvas>');
+		var labels = [];
+		$(".ertekInputok").each(function(index){
+			labels.push($(this).context.id);
+		});
+		var data = {
+			labels:labels,
+			datasets: [
+				{
+					backgroundColor: "blue",
+					data:dataArray
+				}
+			]
+		};
+		var ctx = document.getElementById("chartContainer").getContext("2d");
+		ctx.canvas.width = 1140;
+		ctx.canvas.height = 300;
+		window.myBar = new Chart(ctx, {
+			type: "bar",
+			data: data,
+			options: {
+				onClick: function(e){
+					window.location.href = "lista.php?elem=" + this.getElementAtEvent(e)[0]._model.label;
+				},
+				maintainAspectRatio: true,
+				responsive: true,
+				legend: {
+					display: false
+				},
+				scales: {
+					yAxes: [ { id: "y-axis-1", type: "linear", position: "left", ticks: { min: 0, max: 90 ,
+           callback: function(value) {
+               return value + "%"
+           } } }, ],
+		   xAxes: [{
+                display:false
+            }]
+				}
+			}
+		});
+	}
+	
+	$( ".upButton" ).click(function(attr) {
+	  var tmp = parseInt($("#" + attr.target.id.replace("Up", "")).val());
+	  var regiErtek = tmp; var ujErtek = tmp + 1;
+	  $("#" + attr.target.id.replace("Up", "")).val(tmp + 1);
+	  helyreallitas(attr.target.id.replace("Up", ""), regiErtek, ujErtek);
+	  var dataArray = [];
+	  $(".ertekInputok").each(function(index){
+		  dataArray.push($(this).val());
+	  });
+	  changeCanvas(dataArray);
+	  return false;
+	});
+	
+	$( ".downButton" ).click(function(attr) {
+	  var tmp = parseInt($("#" + attr.target.id.replace("Down", "")).val());
+	  var regiErtek = tmp; var ujErtek = tmp + 1;
+	  $("#" + attr.target.id.replace("Down", "")).val(tmp - 1);
+	  var dataArray = [];
+	  helyreallitas(attr.target.id.replace("Down", ""), regiErtek, ujErtek);
+	  $(".ertekInputok").each(function(index){
+		  dataArray.push($(this).val());
+	  });
+	  changeCanvas(dataArray);
+	  return false;
+	});
+	
+	$('.ertekInputok').on('focusin', function(){
+		//$(this).data('val', $(this).val());
+		//$(this).val('');
+		$(this).attr("data-oldvalue", $(this).val());
+	});
+	
+	$(".ertekInputok").focusout(function(attr){
+		helyreallitas($(this).context.id, $(this).attr("data-oldvalue"), $(this).val());
+		var dataArray = [];
+		$(".ertekInputok").each(function(index){
+			dataArray.push($(this).val());
+		});
+		changeCanvas(dataArray);
+		return false;
+	}); 
+	
+	function archiv(){
+		var data = {
+		  h: '<html><head><meta charset="utf-8"><link href="../css/style.css" rel="stylesheet"/><link href="../css/bootstrap.min.css" rel="stylesheet"/></head><body><table class="table" style="width:80%;margin-left:auto;margin-right:auto;">' + $("#keszTabla").html() + "</table></body></html>"
+		};
+		$.post("service/archiv.php", data);
+		$(".archivalasPopup").removeClass("hidden");
+	}
+	
+	function archivalasPopupBezaras(){
+		$(".archivalasPopup").addClass("hidden");
+	}
+	
+	function rendezesEllenorzesPopupBezaras(){
+		$(".rendezesEllenorzesPopup").addClass("hidden");
+	}
+	
+	function rendezesEllenorzesPopupNyitas(){
+		$(".rendezesEllenorzesPopup").removeClass("hidden");
+	}
+	
+	function sulyozasEllenorzesPopupNyitas(){
+		$(".sulyozasEllenorzesPopup").removeClass("hidden");
+	}
+	
+	function torles(){
+		var data = {};
+		$.post("service/torles.php", data)
+		  .done(function( data ) {
+			window.location.href = "bejelentkezes.php";
+		  });
+	}
+	
+	function torlesPopup(){
+		$(".torlesPopupClass").removeClass("hidden");
+	}
+	
+	function torlesPopupBezaras(){
+		$(".torlesPopupClass").addClass("hidden");
+	}
+	
+	function sulyozasrakerultPopupBezaras(){
+		$(".sulyozasrakerultPopup").addClass("hidden");
+	}
+	
+	$( document ).ready(function() {
+		if($("#sortable li").length >= 10){
+			$("#ujElemButton").attr("disabled", "disabled");
+		}
+	});	
+	
+	function popupBezaras(){
+		$(".popup").addClass("hidden");
+	}
+	
+	</script>	
+</body>
+</html>

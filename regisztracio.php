@@ -4,6 +4,7 @@
 	<title>Regisztráció</title>
 	<link href="css/bootstrap.min.css" rel="stylesheet" />
 	<link href="css/style.css" rel="stylesheet" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<style>
 		.form input, .form select{
 			width: 50%;

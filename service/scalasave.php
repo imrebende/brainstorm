@@ -5,9 +5,11 @@
 	$labels = explode(",", $_GET["labels"]);	
 	$values = explode(",", $_GET["values"]);
 	foreach ($labels as &$label) {
+		echo $label;
 		$label = strip_tags($label);
 		if($label !== ""){
 			$count = "SELECT * FROM sulypontok WHERE userid='" . $_COOKIE['user'] . "' AND lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $label . "';";
+			echo $count;
 			$result = $conn->query($count);
 			
 			$sql = "";

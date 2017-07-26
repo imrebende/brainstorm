@@ -15,6 +15,17 @@ if(isset($_POST['tema'])){
 	$_COOKIE['temajelszo'] = "";
 	setcookie("temajelszo", "", time()-3600*72, "/");
 	if($result->num_rows == 1){
+		
+		if($_COOKIE['usertype'] == "admin") {
+			require("service/db.php");
+			
+			$sql = "UPDATE listak SET active = false";
+			$result = $conn->query($sql);
+			
+			$sql = "UPDATE listak SET active = true WHERE lista_neve='" . $_POST['tema'] . "'";
+			$result = $conn->query($sql);
+		}
+		
 		setcookie("tema", $_POST['tema'], time() + 3600*72, "/");
 		$_COOKIE['tema'] = $_POST['tema'];
 		setcookie("temajelszo", $_POST['jelszo'], time() + 3600*72, "/");
@@ -23,6 +34,18 @@ if(isset($_POST['tema'])){
 		setcookie("tema", "", time()-3600*72, "/");
 		unset($_COOKIE['tema']);
 	}
+	
+	while($row = mysqli_fetch_array($result)){
+		$GLOBALS['fmea'] = $row['isfmea'];
+	}
+}
+
+require("service/db.php");
+$sql = "SELECT * FROM listak WHERE lista_neve='" . $_COOKIE['tema'] . "';";
+$result = $conn->query($sql);
+
+while($row = mysqli_fetch_array($result)){
+	$GLOBALS['fmea'] = $row['isfmea'];
 }
 
 if(isset($_POST['ujElem'])){
@@ -43,6 +66,19 @@ if(isset($_POST['ujElem'])){
 	}
 	
 	$result = $conn->query($sql);
+} else if(isset($_POST['backToInput']) || isset($_POST['backToSort']) || isset($_POST['backToScala'])) {
+	require("service/db.php");
+	
+	$sql = "";
+	if(isset($_POST['backToInput'])){
+		$sql = "UPDATE listak SET allapot='uj' WHERE lista_neve='" . $_COOKIE['tema']  . "';";
+	} else if(isset($_POST['backToSort'])){
+		$sql = "UPDATE listak SET allapot='rendezes' WHERE lista_neve='" . $_COOKIE['tema']  . "';";
+	} else if(isset($_POST['backToScala'])) {
+		$sql = "UPDATE listak SET allapot='skalazas' WHERE lista_neve='" . $_COOKIE['tema']  . "';";
+	}
+	
+	$result = $conn->query($sql);
 } else if(isset($_POST['insert'])){
 	//Új elem beszúrása
 	require("service/db.php");
@@ -54,8 +90,13 @@ if(isset($_POST['ujElem'])){
 	if($resultCheck->num_rows == 0){	
 		if(!isset($_POST['szulo'])) $_POST['szulo'] = "";
 		
-		$sql = "INSERT INTO elemek (lista_neve, elem_neve, szulo_neve)
-				VALUES ('" . $_COOKIE['tema'] . "','" . $_POST['szempont'] . "','" . $_POST['szulo'] . "');";
+		$sql = "INSERT INTO elemek (lista_neve, elem_neve, szulo_neve, creator)
+				VALUES ('" . $_COOKIE['tema'] . "','" . $_POST['szempont'] . "','" . $_POST['szulo'] . "','" .  $_COOKIE['user'] . "');";
+				
+		if($GLOBALS['fmea']){
+			$sql = "INSERT INTO elemek (lista_neve, elem_neve, szulo_neve, kizaro_ertek, idealis_ertek, fuggveny_ertek, dimenzio, creator)
+				VALUES ('" . $_COOKIE['tema'] . "','" . $_POST['szempont'] . "','" . $_POST['szulo'] . "', 10, 1, 1, 'pont'," . $_COOKIE['user'] . ");";
+		}
 				
 		$result = $conn->query($sql);
 		
@@ -76,7 +117,7 @@ if(isset($_POST['ujElem'])){
 	if($resultCheck->num_rows == 0 || $_POST['regiszempont'] == $_POST['szempont']){	
 	
 		if(isset($_POST['dimenzio'])){
-			if($_POST['dimenzio'] == "pont" || $_POST['dimenzio'] == "Pont"){
+			if(($_POST['dimenzio'] == "pont" || $_POST['dimenzio'] == "Pont") && !$GLOBALS['fmea']){
 				$_POST['fvErtek'] = '1';
 				$_POST['idErtek'] = '9';
 				$_POST['kizErtek'] = '0';
@@ -149,20 +190,32 @@ if(isset($_POST['ujElem'])){
 	}
 } else if(isset($_GET['torol'])){
 	//Elem törlése
-	require("service/db.php");
-		
 	if(!isset($_POST['szulo'])) $_POST['szulo'] = "";
 	
-	$sql = "DELETE FROM elemek
-			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $_GET['torol'] . "';";
-	$result = $conn->query($sql);
-	$GLOBALS['sql'] = $sql;
+	function torlesGyerek($szulo) {
+		require("service/db.php");
+		
+		$sqlGyerekekSelect = "SELECT * FROM elemek WHERE szulo_neve='" . $szulo . "' AND lista_neve='" . $_COOKIE['tema'] . "';";
+		$resultGyerekekSelect = $conn->query($sqlGyerekekSelect);
+		while($row = mysqli_fetch_array($resultGyerekekSelect)){						
+			torlesGyerek($row['elem_neve']);
+		}
+		
+		$sql = "DELETE FROM elemek
+			WHERE lista_neve='" . $_COOKIE['tema'] . "' AND elem_neve='" . $szulo . "';";
+		$result = $conn->query($sql);
+		
+		mysqli_close($servername, $username, $password, $dbname);
+	}
+	
+	torlesGyerek($_GET['torol']);
 }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Lista nézet</title>
 	<link href="css/bootstrap.min.css" rel="stylesheet" />
 	<link href="css/jquery-ui.min.css" rel="stylesheet" />
@@ -176,6 +229,7 @@ if(isset($_POST['ujElem'])){
 	</style>
 	<script src="js/jquery.js"></script>
 	<script src="js/jquery-ui.min.js"></script>
+	<script src="js/jquery.ui.touch-punch.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
 	<script type="text/javascript" src="js/script.js"></script>
 	
@@ -190,11 +244,13 @@ if(isset($_POST['ujElem'])){
 			
 			if($result->num_rows == 0){
 				$GLOBALS["allapot"] = "nemletezik";
+				$GLOBALS["active"] = true;
 			}
 			
 			//Rendezhetőség JS
 			while($row = mysqli_fetch_array($result)){
 				$GLOBALS["allapot"] = $row['allapot'];
+				$GLOBALS["active"] = $row['active'];
 				$GLOBALS["is_archived"] = $row['is_archived'];
 				if($row['allapot'] == "rendezes"){
 					echo '<script>
@@ -208,6 +264,10 @@ if(isset($_POST['ujElem'])){
 					  } );
 					  </script>';
 				}
+			}
+			
+			if(!$GLOBALS["active"]) {
+				$GLOBALS["allapot"] = "";
 			}
 			
 			if($_COOKIE['usertype'] != "admin" && $GLOBALS["allapot"] == "uj"){
@@ -226,25 +286,43 @@ if(isset($_POST['ujElem'])){
 	<div class="container margin-top">
 		<div class="main">
 			<?php if($GLOBALS["allapot"] == "rendezes"): ?>
-				<h1>Szempontok rendezése</h1>
+				<?php if($GLOBALS["fmea"]): ?>
+					<h1><span id="temaSzint"></span> rendezés</h1>
+				<?php else: ?>
+					<h1>Szempontok listája</h1>
+				<?php endif; ?>
 			<?php elseif($GLOBALS["allapot"] == "skalazas"): ?>
-				<h1>Súlyozás</h1>
+				<?php if($GLOBALS["fmea"]): ?>
+					<h1><span id="temaSzint"></span> súlyozás</h1>
+				<?php else: ?>
+					<h1>Súlyozás</h1>
+				<?php endif; ?>
 			<?php elseif($GLOBALS["allapot"] == "uj"): ?>
-				<h1>Szempontok listája</h1>
+				<?php if($GLOBALS["fmea"]): ?>
+					<h1>Lista</h1>
+				<?php else: ?>
+					<h1>Lista</h1>
+				<?php endif; ?>
 			<?php elseif($GLOBALS["allapot"] == "kesz"): ?>
 				<!--<h1></h1>-->
 			<?php endif; ?>
 			<h3><?php
 				if($GLOBALS["allapot"] == ""){
-					echo "Nincs jogosultsága ehhez a témához!";
+					if($GLOBALS["active"] == false) {
+						echo "Ez a téma jelenleg nem aktív, vagy nincs jogosultsága hozzá!";
+					} else {
+						echo "Nincs jogosultsága ehhez a témához!";
+					}
 				}
 				$cim = "";
 				if(isset($_COOKIE['tema'])) $cim = $_COOKIE['tema'];
+				$szint = 1;
 				if(isset($_GET['elem'])){
 					require("service/db.php");
 					
 					$cim = $_GET['elem'];
 					$szulo = $_GET['elem'];
+					
 					while($szulo != ""){
 						$sql = "SELECT * FROM elemek WHERE elem_neve='" . $szulo . "' AND lista_neve='" . $_COOKIE['tema'] . "';";
 						$result = $conn->query($sql);
@@ -252,11 +330,28 @@ if(isset($_POST['ujElem'])){
 						while($row = mysqli_fetch_array($result)){						
 							$szulo = $row['szulo_neve'];
 							$cim = $szulo . " > " . $cim;
+							$szint++;
 						}
 					}
 					$cim = $_COOKIE['tema'] . "<span style='font-weight: 300;'>" . $cim . "</span>";
 				}
 				echo $cim;
+				
+				if($GLOBALS["fmea"]){
+					$GLOBALS['szint'] = $szint;
+					if($szint == 1){
+						$sz = "Hiba";
+					} else if($szint == 2){
+						$sz = "Ok";
+					} else if($szint == 3){
+						$sz = "Ellenőrzés";
+					}
+					echo '<script>
+						$( document ).ready(function() {
+							$("#temaSzint").text("' . $sz . '");
+						});
+					</script>';
+				}
 				
 				if($GLOBALS["allapot"] == "kesz"){
 					if(!isset($_GET['szakerto'])) $_GET['szakerto'] = 0;
@@ -361,14 +456,24 @@ if(isset($_POST['ujElem'])){
 							$maxSuly = 0;
 							while($row = mysqli_fetch_array($resultSelect)){
 								$label .= "'" . $row['elem_neve'] . "',";
-								$sulypont = (100 * (0.7 - 1)) / ((pow(0.7, $resultSelect->num_rows)) - 1) * (pow(0.7, $i));
+								if(!$GLOBALS['fmea'])
+									$sulypont = (100 * (0.7 - 1)) / ((pow(0.7, $resultSelect->num_rows)) - 1) * (pow(0.7, $i));
+								else 
+									$sulypont = (10 * (0.7 - 1)) / ((pow(0.7, $resultSelect->num_rows)) - 1) * (pow(0.7, $i));
 								$sulypont = round($sulypont, 1);
 								$data .= round($sulypont, 1) . ",";
 								$GLOBALS["elemek"][$i] = $row['elem_neve'];
-								$GLOBALS["sulyok"][$i] = round($sulypont, 1);
+								if(!$GLOBALS['fmea'])
+									$GLOBALS["sulyok"][$i] = round($sulypont, 1);
+								else 
+									$GLOBALS["sulyok"][$i] = round($sulypont, 0);
 								$i++;
 								if($maxSuly < round($sulypont, 1)){
-									$maxSuly = round($sulypont, 1);
+									if(!$GLOBALS['fmea']){
+										$maxSuly = round($sulypont, 1);
+									} else {
+										$maxSuly = round($sulypont, 0);
+									}
 								}
 							}
 						}
@@ -492,11 +597,12 @@ if(isset($_POST['ujElem'])){
 							$ossz = 0;
 							
 							$sulyszam = 0;
-							if($adottSzuloSzintje != 0){
+							if($adottSzuloSzintje != 0 && !$GLOBALS['fmea']){
 								$sulyszam = round($elemek[$j]->sulyszam * ($szuloSulyok[$adottSzuloSzintje - 1] / 100), 1);
 							}
-							else 
+							else {
 								$sulyszam = round($elemek[$j]->sulyszam, 1);
+							}
 							
 							$sqlIsParent = "SELECT * FROM elemek WHERE lista_neve='" . $_COOKIE['tema'] . "' szulo_neve='" . $elemek[$j]->nev . "'";
 							$resultIsParent = $conn->query($sqlIsParent);	
@@ -510,7 +616,10 @@ if(isset($_POST['ujElem'])){
 								$resultUserPoint = $conn->query($sqlUserPoint);	
 								while($row = mysqli_fetch_array($resultUserPoint)){
 									if(/*$_COOKIE['usertype'] == "admin" || $_COOKIE['user'] == $usersArray[$k] || */$usersArray[$k] == $kivalasztottSzakertoNeve){
-										$pontok .= "<td class='text-right'>" . round($row['sulypont'], 1) . "%</td>";
+										if($GLOBALS['fmea'])
+											$pontok .= "<td class='text-right'>" . round($row['sulypont'], 1) . "</td>";
+										else 
+											$pontok .= "<td class='text-right'>" . round($row['sulypont'], 1) . "%</td>";
 										$szakertoSulyszama = 0;
 										if($adottSzuloSzintje != 0){
 											$szakertoSulyszama = round($row['sulypont'] * ($szakertoSzuloSulyok[$adottSzuloSzintje - 1] / 100), 1);
@@ -550,6 +659,9 @@ if(isset($_POST['ujElem'])){
 							
 							$egyetertesiAllando = 1 - round(sqrt((1 / ($usersNumber - 1)) * ($kiszamoltErtek)), 1);
 							
+							$sulyszamSzoveggel = $sulyszam;
+							if(!$GLOBALS['fmea']) $sulyszamSzoveggel .= "%";
+							
 							$sorok .= "<tr>
 								<td class='szint" . $adottSzuloSzintje . "'>" . $elemek[$j]->nev ."</td>"
 								. $pontok . 
@@ -557,7 +669,7 @@ if(isset($_POST['ujElem'])){
 								<td>" . $elemek[$j]->kizaro . "</td>
 								<td>" . $elemek[$j]->idealis . "</td>
 								<td>" . $elemek[$j]->fuggveny . "</td>
-								<td class='text-right'>" . $sulyszam . "%</td>
+								<td class='text-right'>" . $sulyszamSzoveggel . "</td>
 								<td class='text-right'>" . $egyetertesiAllando . "</td>
 								<td><a class='btn btn-default hidden' href='ujelem.php?elem=" . $elemek[$j]->nev . "'><span class='glyphicon glyphicon-pencil'></span></a></td></tr>";
 							$elemek[$j]->voltMar = true; 
@@ -603,7 +715,7 @@ if(isset($_POST['ujElem'])){
 									<th class="vekony">Ideális érték</th>
 									<th class="vekony">Függvény típusa</th>
 									<th class="text-right">Súly</th>
-									<th class="text-right" style="width: 90px;">Egyetértés</th>
+									<th class="text-right" style="width: 90px;">Inkonzisztencia</th>
 									<th></th>
 								</tr>
 							</thead>
@@ -611,10 +723,11 @@ if(isset($_POST['ujElem'])){
 								. $sorok . 
 							'</tbody>
 						</table>';
-					echo '<button class="btn btn-info" type="button" onclick="regSugo()">?</button>
+					echo '<form method="post" action="lista.php"><button class="btn btn-info" type="button" onclick="regSugo()">?</button>
 					<!--<button class="btn btn-success"><span class="glyphicon glyphicon-save margin-right"></span>Mentés</button>-->
+					<button class="btn btn-danger" type="submit" name="backToScala">Vissza a súlyozásra</button>
 					<button class="btn btn-danger" onclick="torlesPopup()"><span class="glyphicon glyphicon-trash margin-right"></span>Törlés</button>
-					<button class="btn btn-success" onclick="archiv()"><span class="glyphicon glyphicon-folder-open margin-right"></span>Archíválás</button>';
+					<button class="btn btn-success" onclick="archiv()"><span class="glyphicon glyphicon-folder-open margin-right"></span>Archíválás</button></form>';
 					
 					//Diagramok kiírása
 					//foreach ($diagramoknakLabel as $key => $value) {
@@ -680,11 +793,13 @@ if(isset($_POST['ujElem'])){
 						<?php if(isset($_GET['elem']) && $_GET['elem'] !== "") echo '<!--<a class="btn btn-default" name="vissza" href="lista.php"><span class="glyphicon glyphicon-chevron-left margin-right"></span>Vissza a gyökérhez</a>-->';?>
 						<button class="btn btn-info" type="button" onclick="regSugo()">?</button>
 						<button class="btn btn-default" type="button" onclick="faPopupShow()"><span class="glyphicon glyphicon-tree-conifer margin-right"></span>Fastruktúra</button>
-						<button class="btn btn-success" type="submit" name="ujElem" id="ujElemButton"><span class="glyphicon glyphicon-plus margin-right"></span>Új szempont hozzáadása</button>
-						<button class="btn btn-danger" type="submit" name="inputClose">Bevitel lezárása<span class="margin-left glyphicon glyphicon-off"></span></button>
+						<button class="btn btn-success" type="submit" name="ujElem" id="ujElemButton"><span class="glyphicon glyphicon-plus margin-right"></span>
+							<?php if(!$GLOBALS["fmea"]): ?>Új szempont hozzáadása<?php else: ?>Új elem hozzáadása<?php endif; ?></button>
+						<button class="btn btn-danger" type="button" name="inputCloseCheck" onclick="bevitelEllenorzesPopupNyitas()">Bevitel lezárása<span class="margin-left glyphicon glyphicon-off"></span></button>
 					<?php elseif($GLOBALS["allapot"] == "rendezes") : ?>
 						<?php if(isset($_GET['elem']) && $_GET['elem'] !== "") echo '<!--<a class="btn btn-default" name="vissza" href="lista.php"><span class="glyphicon glyphicon-chevron-left margin-right"></span>Vissza a gyökérhez</a>-->';?>
 						<button class="btn btn-info" type="button" onclick="regSugo()">?</button>
+						<button class="btn btn-danger" type="submit" name="backToInput">Vissza a bevitelre</button>
 						<button class="btn btn-default" type="button" onclick="faPopupShow()"><span class="glyphicon glyphicon-tree-conifer margin-right"></span>Fastruktúra</button>
 						<input class="btn btn-success" type="button" value="Rendezett lista beküldése" name="sortSend" onClick="rendezettListaBekuldese()">
 						<button class="btn btn-danger" type="button" name="sortCloseCheck" onclick="rendezesEllenorzesPopupNyitas()">Rendezés lezárása<span class="margin-left glyphicon glyphicon-off"></span></button>
@@ -699,12 +814,17 @@ if(isset($_POST['ujElem'])){
 							}
 							echo "</tr><tr>";
 							for($j = 0; $j < $GLOBALS["sulypontokSzama"]; $j++){
-								echo "<td style='width:" . 1100 / $i . "px;padding-left:" . 1100 / 100 ."px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='" . str_replace(" ", "", $GLOBALS["elemek"][$j]) . "' style='text-align: center;' value='" . round($GLOBALS["sulyok"][$j], 1) . "' /><span class='input-group-addon' style='max-width:26px;padding-left:6px;'>%</span></div></td>";
+								if(!$GLOBALS["fmea"]){
+									echo "<td style='width:" . 1100 / $i . "px;padding-left:" . 1100 / 100 ."px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='" . str_replace(" ", "", $GLOBALS["elemek"][$j]) . "' style='text-align: center;' value='" . round($GLOBALS["sulyok"][$j], 1) . "' /><span class='input-group-addon' style='max-width:26px;padding-left:6px;'>%</span></div></td>";
+								} else {
+									echo "<td style='width:" . 1100 / $i . "px;padding-left:" . 1100 / 100 ."px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='" . str_replace(" ", "", $GLOBALS["elemek"][$j]) . "' style='text-align: center;' value='" . round($GLOBALS["sulyok"][$j], 0) . "' /><span class='input-group-addon' style='max-width:26px;padding-left:6px;'>%</span></div></td>";
+								}
 							}
 							echo "</tr></table>";
 						?>
 						<?php if(isset($_GET['elem']) && $_GET['elem'] !== "") echo '<!--<a class="btn btn-default" name="vissza" href="lista.php"><span class="glyphicon glyphicon-chevron-left margin-right"></span>Vissza a gyökérhez</a>-->';?>
 						<button class="btn btn-info" type="button" onclick="regSugo()">?</button>
+						<button class="btn btn-danger" type="submit" name="backToSort">Vissza a rangsorolásra</button>
 						<button class="btn btn-default" type="button" onclick="faPopupShow()"><span class="glyphicon glyphicon-tree-conifer margin-right"></span>Fastruktúra</button>
 						<button class="btn btn-success" type="button" name="sortChartSend" onClick="skalazottListaBekuldese()">Súlyozott lista beküldése</button>
 						<button class="btn btn-danger" type="button" name="skalaClose" onclick="sulyozasEllenorzesPopupNyitas()">Súlyozás lezárása<span class="margin-left glyphicon glyphicon-off"></span></button>
@@ -731,7 +851,11 @@ if(isset($_POST['ujElem'])){
 							}
 							echo "</tr><tr>";
 							for($j = 0; $j < $GLOBALS["sulypontokSzama"]; $j++){
-								echo "<td style='padding-top:20px;width:" . 1100 / $i. "px;padding-left:" . 1100 / 100 . "px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='" . $GLOBALS["elemek"][$j] . "' style='text-align: center;' value='" . round($GLOBALS["sulyok"][$j], 1) . "' /><span class='input-group-addon' style='max-width:26px;padding-left:6px;'>%</span></div></td>";
+								if(!$GLOBALS["fmea"]){
+									echo "<td style='padding-top:20px;width:" . 1100 / $i. "px;padding-left:" . 1100 / 100 . "px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='" . $GLOBALS["elemek"][$j] . "' style='text-align: center;' value='" . round($GLOBALS["sulyok"][$j], 1) . "' /><span class='input-group-addon' style='max-width:26px;padding-left:6px;'>%</span></div></td>";
+								} else {
+									echo "<td style='padding-top:20px;width:" . 1100 / $i. "px;padding-left:" . 1100 / 100 . "px;'><div class='input-group' style='width: 80%;margin-left: 10%;'><input class='form-control ertekInputok' type='text' id='" . $GLOBALS["elemek"][$j] . "' style='text-align: center;' value='" . round($GLOBALS["sulyok"][$j], 0) . "' /><span class='input-group-addon' style='max-width:26px;padding-left:6px;'>%</span></div></td>";
+								}
 							}
 							echo "</tr></table>";
 						?>
@@ -751,7 +875,11 @@ if(isset($_POST['ujElem'])){
 			<?php if($GLOBALS["allapot"] == "uj") : ?>
 				<?php
 					require("service/db.php");
-					$sql = "SELECT * FROM sugo WHERE nev='uj';";
+					if($GLOBALS["fmea"]){
+						$sql = "SELECT * FROM sugo WHERE nev='fmeauj';";
+					} else {
+						$sql = "SELECT * FROM sugo WHERE nev='uj';";
+					}
 					$result = $conn->query($sql);
 					while($row = mysqli_fetch_array($result)){
 						echo $row['szoveg'];
@@ -760,7 +888,11 @@ if(isset($_POST['ujElem'])){
 			<?php elseif($GLOBALS["allapot"] == "rendezes") : ?>	
 				<?php
 					require("service/db.php");
-					$sql = "SELECT * FROM sugo WHERE nev='rendezes';";
+					if($GLOBALS["fmea"]){
+						$sql = "SELECT * FROM sugo WHERE nev='fmearendezes';";
+					} else {
+						$sql = "SELECT * FROM sugo WHERE nev='rendezes';";
+					}
 					$result = $conn->query($sql);
 					while($row = mysqli_fetch_array($result)){
 						echo $row['szoveg'];
@@ -769,7 +901,11 @@ if(isset($_POST['ujElem'])){
 			<?php elseif($GLOBALS["allapot"] == "skalazas") : ?>
 				<?php
 					require("service/db.php");
-					$sql = "SELECT * FROM sugo WHERE nev='sulyozas';";
+					if($GLOBALS["fmea"]){
+						$sql = "SELECT * FROM sugo WHERE nev='fmeasulyozas';";
+					} else {
+						$sql = "SELECT * FROM sugo WHERE nev='sulyozas';";
+					}
 					$result = $conn->query($sql);
 					while($row = mysqli_fetch_array($result)){
 						echo $row['szoveg'];
@@ -778,7 +914,11 @@ if(isset($_POST['ujElem'])){
 			<?php elseif($GLOBALS["allapot"] == "kesz") : ?>
 				<?php
 					require("service/db.php");
-					$sql = "SELECT * FROM sugo WHERE nev='kesz';";
+					if($GLOBALS["fmea"]){
+						$sql = "SELECT * FROM sugo WHERE nev='fmeakesz';";
+					} else {
+						$sql = "SELECT * FROM sugo WHERE nev='kesz';";
+					}
 					$result = $conn->query($sql);
 					while($row = mysqli_fetch_array($result)){
 						echo $row['szoveg'];
@@ -807,6 +947,18 @@ if(isset($_POST['ujElem'])){
 			<button class="btn btn-success" onClick="archivalasPopupBezaras()">Rendben</button>
 		</div>
 	</div>
+	
+	<?php if($GLOBALS["allapot"] == "uj") : ?>
+		<div class="bevitelEllenorzesPopup hidden">
+			<div class="layer"></div>
+			<div class="alert alert-info" role="alert">
+				<h3>Bevitel lezárása</h3>
+				<p>Biztosan lezárja a bevitelt?</p>
+				<form method="post" action="lista.php"><button class="btn btn-success" name="inputClose" name="inputClose" onclick="bevitelLezarasa()"><span class="glyphicon glyphicon-ok margin-right"></span>Igen</button>
+				<button class="btn btn-danger" onClick="bevitelEllenorzesPopupBezaras()"><span class="glyphicon glyphicon-remove margin-right"></span>Nem</button></form>
+			</div>
+		</div>
+	<?php endif; ?>
 	
 	<?php if($GLOBALS["allapot"] == "rendezes") : ?>
 		<div class="rendezesEllenorzesPopup hidden">
@@ -879,10 +1031,17 @@ if(isset($_POST['ujElem'])){
 				foreach ($szuloOsszeg as $key => $value) {
 					$negyzetesElteres = 0;
 					for($k = 0; $k < $i; $k++){
+						$s = 0;
+						for($l = 0; $l < $i; $l++){
+							if($elemek[$k]->nev == $key)
+								$s += $elemek[$l]->pontszam;
+						}
 						$szuloVagyTema = $elemek[$k]->szulo;
 						if($elemek[$k]->szulo == "") $szuloVagyTema = $_COOKIE['tema'];
+						//echo $key . " " . $szuloSzamossaga[$key] . "<br/>";
 						if($szuloVagyTema == $key){
 							$negyzetesElteres += pow($elemek[$k]->pontszam - $value / $szuloSzamossaga[$key], 2);
+							//$negyzetesElteres += pow($elemek[$k]->pontszam - $usersCount * ($i + 1) / 2, 2);
 						}
 					}
 					$szempont = "SELECT DISTINCT(userid) FROM rangsorpontok, elemek WHERE elemek.lista_neve=rangsorpontok.lista_neve AND elemek.elem_neve=rangsorpontok.elem_neve AND elemek.szulo_neve='" . $elemek[$k]->szulo . "' AND elemek.lista_neve='" . $_COOKIE['tema'] . "'";
@@ -891,7 +1050,7 @@ if(isset($_POST['ujElem'])){
 					$teljesEgyetertes = pow($usersCount, 2) * (pow($szuloSzamossaga[$key], 3) - $szuloSzamossaga[$key]) / 12;
 					$nyil = "";
 					if($szint[$key] != 0) $nyil = "&rarr;";	 
-					echo /*"<span class='szint" . $szint[$key] . "'>" . $nyil . */"<tr><td class='cimke'>" . $key . " (" . $resultSzempont->num_rows . " szakértő súlyozta): </td><td class='ertek'>" . round($negyzetesElteres / $teljesEgyetertes, 1) . "</td></tr>";
+					echo /*"<span class='szint" . $szint[$key] . "'>" . $nyil . */"<tr><td class='cimke'>" . $key . " (" . $resultSzempont->num_rows . " szakértő rendezte): </td><td class='ertek'>" . round($negyzetesElteres / $teljesEgyetertes, 1) . "</td></tr>";
 				}
 					
 				?></table></p>
@@ -915,7 +1074,7 @@ if(isset($_POST['ujElem'])){
 		<div class="sulyozasEllenorzesPopup popup hidden">
 			<div class="layer"></div>
 			<div class="alert alert-info" role="alert">
-				<h3>Egyetértési együttható</h3>
+				<h3>Inkonzisztencia</h3>
 				<p><table style="border: 0px none;"><?php 
 				require("service/db.php");
 			
@@ -941,9 +1100,13 @@ if(isset($_POST['ujElem'])){
 						$kiszamoltErtek += pow($rowInner['sulypont'] - $atlag, 2);
 					}
 					$teljes += $kiszamoltErtek;
-					echo "<tr><td class='cimke'>"; echo $szempontNeve . " ("; echo $resultSzempont->num_rows; echo " szakértő súlyozta): </td><td class='ertek'>"; echo 1 - round(sqrt((1 / ($m - 1)) * $kiszamoltErtek), 1); echo "</td></tr>";
+					if(!$GLOBALS["fmea"]){
+						echo "<tr><td class='cimke'>"; echo $szempontNeve . " ("; echo $resultSzempont->num_rows; echo " szakértő súlyozta): </td><td class='ertek'>"; echo round(sqrt((1 / ($m - 1)) * $kiszamoltErtek), 1); echo "</td></tr>";
+					} else{
+						echo "<tr><td class='cimke'>"; echo $szempontNeve . " ("; echo $resultSzempont->num_rows; echo " szakértő súlyozta): </td><td class='ertek'>"; echo round(sqrt((1 / ($m - 1)) * $kiszamoltErtek), 0); echo "</td></tr>";
+					}
 				}				
-				echo "<tr><td class='cimke'>Egyetértés a teljes súlyrendszernél: </td><td class='ertek'>"; echo 1 - round(sqrt(1 / ($m * $n - 1) * $teljes), 1); echo "</td></tr>";
+				echo "<tr><td class='cimke'>Inkonzisztencia: </td><td class='ertek'>"; echo round(sqrt(1 / ($m * $n - 1) * $teljes), 1); echo "</td></tr>";
 					
 				?></table></p>
 				<p>Biztosan lezárja a súlyozást?</p>
@@ -956,7 +1119,11 @@ if(isset($_POST['ujElem'])){
 	<div class="fapopup hidden">
 		<div class="layer"></div>
 		<div class="alert alert-info" role="alert">
-			<h3>Minősítő szempontok struktúrája</h3>
+			<?php if($GLOBALS["fmea"]): ?>
+				<h3>Elemek struktúrája</h3>
+			<?php else: ?>
+				<h3>Minősítő szempontok struktúrája</h3>
+			<?php endif; ?>
 			<div class="fastruktura">
 			<?php
 				require("service/db.php");
@@ -1003,8 +1170,10 @@ if(isset($_POST['ujElem'])){
 						
 						$sql = "SELECT sulypont FROM sulypontok WHERE elem_neve='" . $elemek[$j]->nev . "' AND userid='" . $_COOKIE['user'] .  "' AND lista_neve='" . $_COOKIE['tema'] . "';";
 						$result = $conn->query($sql);
+						if($GLOBALS["fmea"]) $sz = "";
+						else $sz = "%";
 						while($row = mysqli_fetch_array($result)){
-							$kiirando .= " (" . $row['sulypont'] . "%)";
+							$kiirando .= " (" . $row['sulypont'] . $sz . ")";
 						}
 						
 						$kiirando .= "<br/>";
@@ -1086,7 +1255,20 @@ if(isset($_POST['ujElem'])){
 				xhttp.send();
 				$(".sulyozasrakerultPopup").removeClass("hidden");
 			} else {
-				alert("Az oszlopok értékeinek sorrendje nem változhat. Kérem adja meg úgy az értékeket, hogy a sorrend nem változik!")
+				console.log("else");
+				<?php if(!$GLOBALS['fmea']): ?>
+					alert("Az oszlopok értékeinek sorrendje nem változhat. Kérem adja meg úgy az értékeket, hogy a sorrend nem változik!");
+				<?php else: ?>
+					var xhttp = new XMLHttpRequest();
+					xhttp.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200) {
+							//document.getElementById("demo").innerHTML = this.responseText;
+						}
+					};
+					xhttp.open("GET", "service/scalasave.php?labels=" + labels + "&values=" + values, true);
+					xhttp.send();
+					$(".sulyozasrakerultPopup").removeClass("hidden");
+				<?php endif; ?>
 			}
 		/*} else {
 			alert("Az oszlopok összege nem 100. Kérem adja meg úgy az adatok, hogy 100 maradjon!");
@@ -1095,58 +1277,103 @@ if(isset($_POST['ujElem'])){
 	}
 	
 	function szazasHelyreAllitas(){
-		var osszeg = 0;
-		var utolso = "";
-		$(".ertekInputok").each(function(index){
-			osszeg += parseFloat($(this).val());
-			utolso = $(this).context.id;
-		});	
-		console.log(utolso);
-		var tmp = (parseFloat($("#"+utolso).val())-(osszeg - 100)).toFixed(1);
-		if(osszeg != 100) $("#"+utolso).val(tmp);
+		//FMEA
+		<?php if(!$GLOBALS['fmea']): ?>
+			var osszeg = 0;
+			var utolso = "";
+			$(".ertekInputok").each(function(index){
+				osszeg += parseFloat($(this).val());
+				utolso = $(this).context.id;
+			});	
+			console.log(utolso);
+			var tmp = (parseFloat($("#"+utolso).val())-(osszeg - 100)).toFixed(1);
+			if(osszeg != 100) $("#"+utolso).val(tmp);
+		<?php endif; ?>
 	}
 	
 	function helyreallitas(id, regiErtek, ujErtek){
-		var data = [];
-		var data2 = [];
-		var db = 0;
-		$(".ertekInputok").each(function(index){
-			data.push($(this).val());
-			db++;
-		});
-		$(".ertekInputok").each(function(index){
-			if($(this).context.id != id){
-				var tmp = parseFloat($(this).val());
-				tmp = tmp * (100 - ujErtek) / (100 - regiErtek);
-				tmp = tmp.toFixed(1);
-				$(this).val(tmp);
-			}
-			data2.push($(this).val());
-		});
-		
-		//Ellenőrzés
-		var l = true;
-		var i = 0; var elozoErtek;
-		$(".ertekInputok").each(function(index){
-		  if(i == 0){
-			  elozoErtek = parseFloat($(this).val());
-		  } else if(elozoErtek < parseFloat($(this).val())){
-			  l = false;
-		  }
-		  if(parseFloat($(this).val()) >= 90.5 || parseFloat($(this).val()) <= 0.5) l = false;
-		  elozoErtek = data2[i];
-		  i++;
-		});
-		
-		if(!l){
-			i = 0;
+		//FMEA
+		<?php if(!$GLOBALS['fmea']): ?>
+			var data = [];
+			var data2 = [];
+			var db = 0;
 			$(".ertekInputok").each(function(index){
-				$(this).val(data[i]);
-				i++;
+				data.push($(this).val());
+				db++;
 			});
-			$("#"+id).val(regiErtek);
-		}
-		szazasHelyreAllitas();
+			$(".ertekInputok").each(function(index){
+				if($(this).context.id != id){
+					var tmp = parseFloat($(this).val());
+					tmp = tmp * (100 - ujErtek) / (100 - regiErtek);
+					tmp = tmp.toFixed(1);
+					$(this).val(tmp);
+				}
+				data2.push($(this).val());
+			});
+			
+			//Ellenőrzés
+			var l = true;
+			var i = 0; var elozoErtek;
+			$(".ertekInputok").each(function(index){
+			  if(i == 0){
+				  elozoErtek = parseFloat($(this).val());
+			  } else if(elozoErtek < parseFloat($(this).val())){
+				  l = false;
+			  }
+			  if(parseFloat($(this).val()) >= 90.5 || parseFloat($(this).val()) <= 0.5) l = false;
+			  elozoErtek = data2[i];
+			  i++;
+			});
+			
+			if(!l){
+				i = 0;
+				$(".ertekInputok").each(function(index){
+					$(this).val(data[i]);
+					i++;
+				});
+				$("#"+id).val(regiErtek);
+			}
+			szazasHelyreAllitas();
+		<?php else: ?>
+			var data = [];
+			var data2 = [];
+			var db = 0;
+			$(".ertekInputok").each(function(index){
+				data.push($(this).val());
+				db++;
+			});
+			$(".ertekInputok").each(function(index){
+				if($(this).context.id != id){
+					var tmp = parseFloat($(this).val());
+					tmp = tmp.toFixed(0);
+					$(this).val(tmp);
+				}
+				data2.push($(this).val());
+			});
+			
+			//Ellenőrzés
+			var l = true;
+			var i = 0; var elozoErtek;
+			$(".ertekInputok").each(function(index){
+			  if(i == 0){
+				  elozoErtek = parseFloat($(this).val());
+			  } else if(elozoErtek < parseFloat($(this).val())){
+				  l = false;
+			  }
+			  if(parseFloat($(this).val()) > 10 || parseFloat($(this).val()) < 1) l = false;
+			  elozoErtek = data2[i];
+			  i++;
+			});
+			
+			if(!l){
+				i = 0;
+				$(".ertekInputok").each(function(index){
+					$(this).val(data[i]);
+					i++;
+				});
+				$("#"+id).val(regiErtek);
+			}
+		<?php endif; ?>
 	}
 	
 	function changeCanvas(dataArray){
@@ -1194,10 +1421,15 @@ if(isset($_POST['ujElem'])){
 	}
 	
 	$( ".upButton" ).click(function(attr) {
-	  var tmp = parseFloat($("#" + attr.target.id.replace("Up", "")).val());
+	  var id = "";
+	  if(attr.target.id != "")
+		  id = attr.target.id;
+	  else 
+		  id = attr.target.parentElement.id;
+	  var tmp = parseFloat($("#" + id.replace("Up", "")).val());
 	  var regiErtek = tmp; var ujErtek = tmp + 1;
-	  $("#" + attr.target.id.replace("Up", "")).val(tmp + 1);
-	  helyreallitas(attr.target.id.replace("Up", ""), regiErtek, ujErtek);
+	  $("#" + id.replace("Up", "")).val(tmp + 1);
+	  helyreallitas(id.replace("Up", ""), regiErtek, ujErtek);
 	  var dataArray = [];
 	  $(".ertekInputok").each(function(index){
 		  dataArray.push($(this).val());
@@ -1207,11 +1439,16 @@ if(isset($_POST['ujElem'])){
 	});
 	
 	$( ".downButton" ).click(function(attr) {
-	  var tmp = parseFloat($("#" + attr.target.id.replace("Down", "")).val());
+	  var id = "";
+	  if(attr.target.id != "")
+		  id = attr.target.id;
+	  else 
+		  id = attr.target.parentElement.id;
+	  var tmp = parseFloat($("#" + id.replace("Down", "")).val());
 	  var regiErtek = tmp; var ujErtek = tmp - 1;
-	  $("#" + attr.target.id.replace("Down", "")).val(tmp - 1);
+	  $("#" + id.replace("Down", "")).val(tmp - 1);
 	  var dataArray = [];
-	  helyreallitas(attr.target.id.replace("Down", ""), regiErtek, ujErtek);
+	  helyreallitas(id.replace("Down", ""), regiErtek, ujErtek);
 	  $(".ertekInputok").each(function(index){
 		  dataArray.push($(this).val());
 	  });
@@ -1243,6 +1480,14 @@ if(isset($_POST['ujElem'])){
 	
 	function archivalasPopupBezaras(){
 		$(".archivalasPopup").addClass("hidden");
+	}
+	
+	function bevitelEllenorzesPopupNyitas(){
+		$(".bevitelEllenorzesPopup").removeClass("hidden");
+	}
+	
+	function bevitelEllenorzesPopupBezaras(){
+		$(".bevitelEllenorzesPopup").addClass("hidden");
 	}
 	
 	function rendezesEllenorzesPopupBezaras(){
@@ -1282,6 +1527,14 @@ if(isset($_POST['ujElem'])){
 			$("#ujElemButton").attr("disabled", "disabled");
 		}
 		szazasHelyreAllitas();
+		
+		<?php if($GLOBALS['fmea']): ?>
+			<?php if($GLOBALS['szint'] == 3): ?>
+				if($("#sortable li").length >= 1){
+					$("#ujElemButton").attr("disabled", "disabled");
+				}
+			<?php endif; ?>
+		<?php endif; ?>
 	});	
 	
 	function popupBezaras(){
